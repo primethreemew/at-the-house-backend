@@ -1,0 +1,36 @@
+php artisan db:seed --class=RoleSeeder
+
+use App\Models\User;
+use App\Models\Role;
+
+$admin = User::create([
+    'name' => 'Admin',
+    'email' => 'admin@gmail.com',
+    'phone' => '1234567890',
+    'password' => bcrypt('admin123'),
+]);
+
+$admin->roles()->attach(Role::where('name', 'admin')->first());
+
+
+verify
+
+$admin->roles;
+
+
+php artisan tinker
+
+
+use App\Models\User;
+
+$normalUser = User::create([
+    'name' => 'Muzammil',
+    'email' => 'muzammil@example.com',
+    'password' => bcrypt('user123'),
+]);
+
+$normalUser->roles()->attach(Role::where('name', 'user')->first());
+$normalUser = User::find(4); 
+
+
+$normalUser;
