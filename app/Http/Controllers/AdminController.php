@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 // use Illuminate\Support\Facades\Gate;
 // use App\Models\AgentService;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\User;
 use App\Models\Role;
@@ -157,20 +158,20 @@ class AdminController extends Controller
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
-    public function getAllServices($categoryType = null)
+    public function getAllServices()
     {
         // Define allowed category types
         $allowedCategoryTypes = ['popular', 'most_demanding', 'normal'];
+        $result = [];
 
-        // Check if the provided category type is valid
-        if ($categoryType && in_array($categoryType, $allowedCategoryTypes)) {
-            // Retrieve services with the specified category type
-            $services = Service::where('category_type', $categoryType)->get();
-            return response()->json(['services' => $services]);
-        } else {
-            // If no or invalid category type is provided, return a message
-            return response()->json(['message' => 'Invalid or no category type provided.']);
+        foreach ($allowedCategoryTypes as $categoryType) {
+            // Retrieve services for the current category type using raw SQL
+            $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
+            $result[$categoryType] = $services;
         }
+
+        // Return all services grouped by category type
+        return response()->json(['services' => $result]);
     }
 
 
