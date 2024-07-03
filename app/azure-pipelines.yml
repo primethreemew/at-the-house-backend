@@ -29,7 +29,7 @@ steps:
 
 - task: AzureRmWebAppDeployment@4
   inputs:
-    azureSubscription: '<Your-Azure-Subscription>'
+    azureSubscription: 'd7dda821-25b5-479e-9b8c-131e47953176'
     appType: 'webApp'
-    appName: '<Your-App-Service-Name>'
+    appName: 'atthehouseorgapi'
     package: '$(System.DefaultWorkingDirectory)'
