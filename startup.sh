@@ -8,7 +8,7 @@ cat <<EOL > $NGINX_CONF
 server {
     listen 8080;
     listen [::]:8080;
-    root /var/www/html/wwwroot/public;
+    root /var/www/html/wwwroot;
     index index.php index.html index.htm;
     server_name example.com www.example.com;
     port_in_redirect off;
