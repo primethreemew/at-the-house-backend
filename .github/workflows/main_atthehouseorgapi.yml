@@ -34,9 +34,13 @@ jobs:
       - name: Prepare deployment directory
         run: |
           mkdir -p deploy
-          cp -r * deploy/
-          cp -r .[^.]* deploy/
+          rsync -av --exclude='deploy' . deploy/
           cp -r public deploy/
+        shell: /usr/bin/bash -e {0}
+        env:
+          COMPOSER_PROCESS_TIMEOUT: 0
+          COMPOSER_NO_INTERACTION: 1
+          COMPOSER_NO_AUDIT: 1
 
       - name: Zip artifact for deployment
         run: zip -r release.zip deploy/*
@@ -57,23 +61,4 @@ jobs:
       id-token: write #This is required for requesting the JWT
 
     steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v3
-        with:
-          name: php-app
-
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
-
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_ATTHEHOUSEAPI_SERVICE_PRINCIPAL }}
-
-      - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v2
-        id: deploy-to-webapp
-        with:
-          app-name: 'atthehouseorgapi'
-          slot-name: 'Production'
-          package: ./deploy
+      - name: Download artifac
