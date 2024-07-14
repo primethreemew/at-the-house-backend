@@ -10,7 +10,7 @@ server {
     listen [::]:80;
     root /var/www/html/wwwroot/public;
     index index.php index.html index.htm;
-    server_name example.com www.example.com;
+    server_name atthehouseorgapi.azurewebsites.net www.atthehouseorgapi.azurewebsites.net;
     port_in_redirect off;
 
     location / {
