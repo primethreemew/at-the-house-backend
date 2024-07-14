@@ -8,7 +8,7 @@ cat <<EOL > $NGINX_CONF
 server {
     listen 80;
     listen [::]:80;
-    root /var/www/html/wwwroot/public;
+    root /home/site/wwwroot/public;
     index index.php index.html index.htm;
     server_name atthehouseorgapi.azurewebsites.net www.atthehouseorgapi.azurewebsites.net;
     port_in_redirect off;
@@ -42,11 +42,11 @@ server {
 EOL
 
 # Set correct permissions
-find /var/www/html/wwwroot -type d -exec chmod 755 {} \;
-find /var/www/html/wwwroot -type f -exec chmod 644 {} \;
+find /home/site/wwwroot -type d -exec chmod 755 {} \;
+find /home/site/wwwroot -type f -exec chmod 644 {} \;
 
 # Ensure correct ownership
-chown -R www-data:www-data /var/www/html/wwwroot
+chown -R www-data:www-data /home/site/wwwroot
 
 # Restart Nginx to apply the changes
 service nginx restart
