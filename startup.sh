@@ -6,8 +6,8 @@ NGINX_CONF="/etc/nginx/sites-available/default"
 # Update Nginx configuration to set the document root to the public directory of Laravel
 cat <<EOL > $NGINX_CONF
 server {
-    listen 80;
-    listen [::]:80;
+    listen 8080;
+    listen [::]:8080;
     root /home/site/wwwroot/public;
     index index.php index.html index.htm;
     server_name atthehouseorgapi.azurewebsites.net www.atthehouseorgapi.azurewebsites.net;
