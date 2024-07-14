@@ -14,6 +14,7 @@ server {
     port_in_redirect off;
 
     location / {
+        index  index.php index.html index.htm hostingstart.html;
         try_files \$uri \$uri/ /index.php?\$query_string;
     }
 
