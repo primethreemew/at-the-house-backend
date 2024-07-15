@@ -5,7 +5,7 @@ server {
     listen [::]:8080;
     root /home/site/wwwroot/public; # Changed for Laravel
     index  index.php index.html index.htm;
-    server_name  example.com www.example.com; 
+    server_name  athb.azurewebsites.net www.athb.azurewebsites.net;
     port_in_redirect off;
 
     location / {            
