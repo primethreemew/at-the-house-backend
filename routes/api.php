@@ -71,7 +71,7 @@ Route::middleware('auth:sanctum','verified')->group(function () {
         Route::get('/admin/agents', [AdminController::class, 'viewAgents']);
 
         // // Admin-only route to get all services
-        // Route::get('/admin/services', [AdminController::class, 'getAllServices']);
+        Route::get('/admin/services', [AdminController::class, 'getAllServices']);
 
         // Admin-only route to create a service
         Route::post('/admin/services/create', [AdminController::class, 'createService']);
