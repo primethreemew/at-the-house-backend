@@ -78,7 +78,6 @@ class AdminController extends Controller
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
-    
 
     public function verifyEmail(Request $request)
     {

@@ -188,6 +188,45 @@ public function verifyEmail(Request $request)
         return response()->json(['error' => 'Invalid credentials'], 401);
     }
 
+    public function loginApp(Request $request)
+    {
+        // Attempt to log in
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+            // Check user role after successful login
+            $user = User::where('email', $request->email)->first();
+
+            if ($user->hasRole('admin')) {
+                // Generate and attach Sanctum token for admin
+                $token = $user->createToken('admin-token')->plainTextToken;
+
+                // Return JSON response for admin with token
+                return response()->json(['success' => 'true','role' => 'admin', 'message' => 'Admin login successful', 'token' => $token]);
+            } elseif ($user->hasRole('user')) {
+                // Generate and attach Sanctum token for user
+                $token = $user->createToken('user-token')->plainTextToken;
+
+                // Return JSON response for user with token
+                return response()->json(['success' => 'true','role' => 'user', 'message' => 'User login successful', 'token' => $token]);
+            } elseif ($user->hasRole('agent')) {
+                // Generate and attach Sanctum token for agent
+                $token = $user->createToken('agent-token')->plainTextToken;
+
+                // Return JSON response for agent with token
+                return response()->json(['success' => 'true','role' => 'agent', 'message' => 'Agent login successful', 'token' => $token]);
+            } else {
+                // Handle other roles as needed
+                // Generate and attach Sanctum token for other roles
+                $token = $user->createToken('other-token')->plainTextToken;
+
+                // Return JSON response for other roles with token
+                return response()->json(['success' => 'true','role' => 'other', 'message' => 'Login successful', 'token' => $token]);
+            }
+        }
+
+        // Handle failed login
+        return response()->json(['success' => 'false','error' => 'Invalid credentials'], 401);
+    }
+
     public function changePassword(Request $request)
     {
         $request->validate([

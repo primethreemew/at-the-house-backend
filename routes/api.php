@@ -20,6 +20,11 @@ Route::post('/register', [AuthController::class, 'register']);
 
 // User login
 Route::post('/login', [AuthController::class, 'login'])->name('login');
+// Mobile App
+//Route::post('/login', [AuthController::class, 'loginApp'])->name('login');
+Route::prefix('mobile')->group(function () {
+    Route::post('/login', [AuthController::class, 'loginApp'])->name('login.app');
+});
 
 // Send reset password email
 Route::post('/send-reset-password-email', [PasswordResetController::class, 'send_reset_password_email']);
@@ -29,8 +34,6 @@ Route::post('/reset-password/{token}', [PasswordResetController::class, 'reset']
 
 // Verify email (you might want to use the email verification feature provided by Laravel)
 Route::post('/email/verify', [AdminController::class, 'verifyEmail']);
-
-
 
 // Verify OTP
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
