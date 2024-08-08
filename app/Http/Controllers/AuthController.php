@@ -80,6 +80,10 @@ class AuthController extends Controller
         try {
             // Send OTP via email
             Mail::to($user->email)->send(new OtpMail($otp));
+            return response()->json([
+                "success" => false,
+                "message" => "Registration successful, but failed to send OTP email. Please try again."
+            ], 500);
         } catch (\Exception $e) {
             // Log the error
             Log::error("Failed to send OTP to user {$user->id}: " . $e->getMessage());
