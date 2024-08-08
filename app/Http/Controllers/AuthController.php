@@ -56,6 +56,18 @@ class AuthController extends Controller
     public function registerApp(RegisterUserRequest $request)
     {
         try {
+            // Check if a user with the same email already exists
+            $existingUser = User::where('email', $request->input('email'))->first();
+
+            if ($existingUser) {
+                // Return a response indicating that the email is already registered
+                return response()->json([
+                    "success" => false,
+                    "message" => "A user with this email address is already registered."
+                ], 409); // 409 Conflict
+            }
+
+            // Create a new user
             $user = User::create([
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
@@ -67,18 +79,12 @@ class AuthController extends Controller
             $userRole = Role::where('name', 'user')->first();
 
             if ($userRole) {
-                // Attach the 'user' role using the correct ID
                 $user->roles()->attach($userRole->id);
             }
 
-            // Generate and store OTP for the user
             $otp = $user->generateOTP();
             $user->update(['otp' => $otp]);
-
-            // Log the generated OTP for debugging
-            Log::info("Generated OTP for user {$user->id}: $otp");
-
-            // Send OTP via email
+            
             Mail::to($user->email)->send(new OtpMail($otp));
 
             // Return success response
@@ -88,16 +94,13 @@ class AuthController extends Controller
                 'message' => 'Registration successful! Please check your email for the OTP.'
             ], 201);
         } catch (\Exception $e) {
-            // Log the error
-            Log::error("Failed to complete registration for user: " . $e->getMessage());
-            
-            // Return an error response
             return response()->json([
                 "success" => false,
                 "message" => "Registration failed. Please try again later."
             ], 500);
         }
     }
+
 
 
 
