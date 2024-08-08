@@ -77,11 +77,28 @@ class AuthController extends Controller
         // Log the generated OTP for debugging
         Log::info("Generated OTP for user {$user->id}: $otp");
 
-        // Send OTP via email
-        Mail::to($user->email)->send(new OtpMail($otp));
+        try {
+            // Send OTP via email
+            Mail::to($user->email)->send(new OtpMail($otp));
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error("Failed to send OTP to user {$user->id}: " . $e->getMessage());
+            
+            // Return an error response
+            return response()->json([
+                "success" => false,
+                "message" => "Registration successful, but failed to send OTP email. Please try again."
+            ], 500);
+        }
 
-        return response()->json(["success" => true, "userId" => $user->id, 'message' => 'Registration successful! Please check your email for the OTP.'], 201);
+        // Return success response
+        return response()->json([
+            "success" => true,
+            "userId" => $user->id,
+            'message' => 'Registration successful! Please check your email for the OTP.'
+        ], 201);
     }
+
 
 
 
