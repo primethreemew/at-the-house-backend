@@ -53,55 +53,172 @@ class AuthController extends Controller
         return response()->json(['message' => 'OTP sent successfully'], 201);
     }
 
+    public function registerApp(RegisterUserRequest $request)
+    {
+        $user = User::create([
+            'name' => $request->input('name'),
+            'email' => $request->input('email'),
+            'phone' => $request->input('phone'),
+            'password' => Hash::make($request->input('password')),
+        ]);
 
+        // Find the role ID for 'user'
+        $userRole = Role::where('name', 'user')->first();
 
-public function verifyEmail(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email',
-        'otp' => 'required|digits:6',
-    ]);
+        if ($userRole) {
+            // Attach the 'user' role using the correct ID
+            $user->roles()->attach($userRole->id);
+        }
 
-    $user = User::where('email', $request->input('email'))->first();
+        // Generate and store OTP for the user
+        $otp = $user->generateOTP();
+        $user->update(['otp' => $otp]);
 
-    if (!$user) {
-        return response()->json(['error' => 'User not found'], 404);
+        // Log the generated OTP for debugging
+        Log::info("Generated OTP for user {$user->id}: $otp");
+
+        // Send OTP via email
+        Mail::to($user->email)->send(new OtpMail($otp));
+
+        return response()->json(["success" => true, "userId" => $user->id, 'message' => 'Registration successful! Please check your email for the OTP.'], 201);
     }
 
-    if ($user->email_verified_at) {
-        return response()->json(['message' => 'User is already verified']);
+
+
+    public function verifyEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required|digits:6',
+        ]);
+
+        $user = User::where('email', $request->input('email'))->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        if ($user->email_verified_at) {
+            return response()->json(['message' => 'User is already verified']);
+        }
+
+        // Fetch the stored OTP from the user model
+        $storedOTP = (string) $user->otp;
+
+        // Log values for debugging
+        \Illuminate\Support\Facades\Log::info("Received OTP for user {$user->id}: {$request->input('otp')}");
+        \Illuminate\Support\Facades\Log::info("Stored OTP for user {$user->id}: $storedOTP");
+
+        if ($storedOTP == $request->input('otp')) {
+            // $user->update(['email_verified_at' => now()]);
+
+            $user->email_verified_at = date('Y-m-d H:i:s');
+            $user->save();
+
+            // Log successful OTP verification
+            \Illuminate\Support\Facades\Log::info("OTP verified successfully for user {$user->id}");
+
+            return response()->json(['message' => 'Email verified successfully']);
+        }
+
+        // Log failed OTP verification
+        \Illuminate\Support\Facades\Log::info("Invalid OTP for user {$user->id}. Stored OTP: {$storedOTP}, Input OTP: {$request->input('otp')}");
+
+        return response()->json(['error' => 'Invalid OTP'], 422);
     }
 
-    // Fetch the stored OTP from the user model
-    $storedOTP = (string) $user->otp;
+    public function verifyEmailApp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required|digits:6',
+        ]);
 
-    // Log values for debugging
-    \Illuminate\Support\Facades\Log::info("Received OTP for user {$user->id}: {$request->input('otp')}");
-    \Illuminate\Support\Facades\Log::info("Stored OTP for user {$user->id}: $storedOTP");
+        $user = User::where('email', $request->input('email'))->first();
 
-    if ($storedOTP == $request->input('otp')) {
-        // $user->update(['email_verified_at' => now()]);
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
 
-        $user->email_verified_at = date('Y-m-d H:i:s');
-        $user->save();
+        if ($user->email_verified_at) {
+            return response()->json(['message' => 'User is already verified']);
+        }
 
-        // Log successful OTP verification
-        \Illuminate\Support\Facades\Log::info("OTP verified successfully for user {$user->id}");
+        // Fetch the stored OTP from the user model
+        $storedOTP = (string) $user->otp;
 
-        return response()->json(['message' => 'Email verified successfully']);
+        // Log values for debugging
+        \Illuminate\Support\Facades\Log::info("Received OTP for user {$user->id}: {$request->input('otp')}");
+        \Illuminate\Support\Facades\Log::info("Stored OTP for user {$user->id}: $storedOTP");
+
+        if ($storedOTP == $request->input('otp')) {
+            // $user->update(['email_verified_at' => now()]);
+
+            $user->email_verified_at = date('Y-m-d H:i:s');
+            $user->save();
+
+            // Log successful OTP verification
+            \Illuminate\Support\Facades\Log::info("OTP verified successfully for user {$user->id}");
+
+            return response()->json(["suceess" => true,'message' => 'OTP verified successfully', 'userId' => $user->id]);
+        }
+
+        // Log failed OTP verification
+        \Illuminate\Support\Facades\Log::info("Invalid OTP for user {$user->id}. Stored OTP: {$storedOTP}, Input OTP: {$request->input('otp')}");
+
+        return response()->json(['error' => 'Invalid OTP'], 422);
     }
 
-    // Log failed OTP verification
-    \Illuminate\Support\Facades\Log::info("Invalid OTP for user {$user->id}. Stored OTP: {$storedOTP}, Input OTP: {$request->input('otp')}");
-
-    return response()->json(['error' => 'Invalid OTP'], 422);
-}
 
 
 
 
+    public function verifyOtp(Request $request)
+    {
+        // Log request data
+        Log::info("Request Data: " . json_encode($request->all()));
 
- public function verifyOtp(Request $request)
+        try {
+            // Attempt to get the user from the request
+            $user = $request->user();
+
+            // Log user data
+            Log::info("User Data: " . json_encode($user));
+
+            // Check if the user has the 'user' role
+            if (!$user || !$user->hasRole('user')) {
+                Log::info("User not verified or not found for OTP verification");
+                return response()->json(['error' => 'User not verified'], 401);
+            }
+
+            $otp = $request->input('otp');
+
+            // Log received OTP
+            Log::info("Received OTP for user {$user->id}: $otp");
+
+            // Compare OTP
+            if ($otp == $user->otp) {
+                // Mark the user as verified
+                $user->update(['verified' => true]);
+
+                // Log successful OTP verification
+                Log::info("OTP verified successfully for user {$user->id}");
+
+                return response()->json(['message' => 'OTP verified successfully']);
+            }
+
+            // Log failed OTP verification
+            Log::info("Invalid OTP for user {$user->id}. Stored OTP: {$user->otp}");
+
+            return response()->json(['error' => 'Invalid OTP'], 401);
+        } catch (\Exception $exception) {
+            // Log any exception that occurs
+            Log::error("Exception: " . $exception->getMessage());
+            return response()->json(['error' => 'An error occurred during OTP verification'], 500);
+        }
+    }
+
+    public function verifyOtpApp(Request $request)
     {
         // Log request data
         Log::info("Request Data: " . json_encode($request->all()));
@@ -192,7 +309,7 @@ public function verifyEmail(Request $request)
     {
         // Attempt to log in
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-            // Check user role after successful login
+            
             $user = User::where('email', $request->email)->first();
 
             if ($user->hasRole('admin')) {
@@ -200,31 +317,31 @@ public function verifyEmail(Request $request)
                 $token = $user->createToken('admin-token')->plainTextToken;
 
                 // Return JSON response for admin with token
-                return response()->json(['success' => 'true','role' => 'admin', 'message' => 'Admin login successful', 'token' => $token]);
+                return response()->json(['success' => true,'role' => 'admin', 'message' => 'Admin login successful', 'token' => $token]);
             } elseif ($user->hasRole('user')) {
                 // Generate and attach Sanctum token for user
                 $token = $user->createToken('user-token')->plainTextToken;
 
                 // Return JSON response for user with token
-                return response()->json(['success' => 'true','role' => 'user', 'message' => 'User login successful', 'token' => $token]);
+                return response()->json(['success' => true,'role' => 'user', 'message' => 'User login successful', 'token' => $token]);
             } elseif ($user->hasRole('agent')) {
                 // Generate and attach Sanctum token for agent
                 $token = $user->createToken('agent-token')->plainTextToken;
 
                 // Return JSON response for agent with token
-                return response()->json(['success' => 'true','role' => 'agent', 'message' => 'Agent login successful', 'token' => $token]);
+                return response()->json(['success' => true,'role' => 'agent', 'message' => 'Agent login successful', 'token' => $token]);
             } else {
                 // Handle other roles as needed
                 // Generate and attach Sanctum token for other roles
                 $token = $user->createToken('other-token')->plainTextToken;
 
                 // Return JSON response for other roles with token
-                return response()->json(['success' => 'true','role' => 'other', 'message' => 'Login successful', 'token' => $token]);
+                return response()->json(['success' => true,'role' => 'other', 'message' => 'Login successful', 'token' => $token]);
             }
         }
 
         // Handle failed login
-        return response()->json(['success' => 'false','error' => 'Invalid credentials'], 401);
+        return response()->json(['success' => false,'error' => 'Invalid credentials'], 401);
     }
 
     public function changePassword(Request $request)

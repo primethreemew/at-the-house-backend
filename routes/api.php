@@ -23,7 +23,10 @@ Route::post('/login', [AuthController::class, 'login'])->name('login');
 // Mobile App
 //Route::post('/login', [AuthController::class, 'loginApp'])->name('login');
 Route::prefix('mobile')->group(function () {
+    Route::post('/register', [AuthController::class, 'registerApp']);
     Route::post('/login', [AuthController::class, 'loginApp'])->name('login.app');
+    Route::post('/verify-otp', [AuthController::class, 'verifyOtpApp']);
+    Route::post('/verify-email', [AuthController::class, 'verifyEmailApp']);
 });
 
 // Send reset password email
