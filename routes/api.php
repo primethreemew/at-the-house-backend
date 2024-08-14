@@ -8,27 +8,43 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AgentServiceController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ServiceController;
-
+use App\Models\User;
 /*
 |--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------
 */
 
+Route::get('/generate-token', function () {
+    $user = User::find(88); // Replace with the user ID
+    $token = $user->createToken('argon')->plainTextToken;
+
+    return response()->json(['token' => $token]);
+});
 // User registration
 Route::post('/register', [AuthController::class, 'register']);
 
 // User login
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 // Mobile App
-//Route::post('/login', [AuthController::class, 'loginApp'])->name('login');
+
 Route::prefix('mobile')->group(function () {
     Route::post('/register', [AuthController::class, 'registerApp']);
     Route::post('/login', [AuthController::class, 'loginApp'])->name('login.app');
     Route::post('/verify-otp', [AuthController::class, 'verifyOtpApp']);
     Route::post('/verify-email', [AuthController::class, 'verifyEmailApp']);
+    Route::get('/admin/services', [AdminController::class, 'getAllServicesApp']);
 });
 
+// Routes requiring authentication and email verification
+Route::middleware('auth:sanctum', 'verified')->prefix('mobile')->group(function () {
+    Route::post('/change-password', [AuthController::class, 'changePasswordApp']);
+
+    Route::middleware('role:admin')->group(function () {
+        // Register an agent
+        Route::post('/admin/register-agent', [AdminController::class, 'registerAgentApp']);
+    });
+});
 // Send reset password email
 Route::post('/send-reset-password-email', [PasswordResetController::class, 'send_reset_password_email']);
 

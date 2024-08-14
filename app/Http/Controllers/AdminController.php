@@ -78,6 +78,47 @@ class AdminController extends Controller
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
+    public function registerAgentApp(RegisterUserRequest $request)
+    {
+        try {
+            // Check if the authenticated user is an admin
+            if (Auth::user()->roles->contains('name', 'admin')) {
+                // Create a new user with the agent role
+                $agent = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'password' => bcrypt($request->password),
+                ]);
+
+                // Assign the agent role to the new user
+                $role = Role::where('name', 'agent')->first();
+                if ($role) {
+                    $agent->roles()->attach($role);
+                } else {
+                    return response()->json(['success' => false, 'message' => 'Agent role not found'], 404);
+                }
+
+                // Send email verification notification
+                if (!$agent->hasVerifiedEmail()) {
+                    $agent->sendEmailVerificationNotification();
+                }
+
+                return response()->json(['success' => true, 'message' => 'Verification Request Sent!']);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+        } catch (\Exception $e) {
+            // Handle any errors that occur during the process
+            return response()->json(['success' => false, 'message' => 'An error occurred while registering the agent', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+
+        // If not an admin, return an error response
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
 
     public function verifyEmail(Request $request)
     {
@@ -171,6 +212,25 @@ class AdminController extends Controller
 
         // Return all services grouped by category type
         return response()->json(['services' => $result]);
+    }
+
+    public function getAllServicesApp()
+    {
+        $allowedCategoryTypes = ['popular', 'most_demanding', 'normal'];
+        $result = [];
+
+        try {
+            foreach ($allowedCategoryTypes as $categoryType) {
+                $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
+                $result[$categoryType] = $services;
+            }
+
+            // Return all services grouped by category type
+            return response()->json(['success' => true, 'services' => $result]);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
+        }
     }
 
 

@@ -60,7 +60,6 @@ class AuthController extends Controller
             $existingUser = User::where('email', $request->input('email'))->first();
 
             if ($existingUser) {
-                // Return a response indicating that the email is already registered
                 return response()->json([
                     "success" => false,
                     "message" => "A user with this email address is already registered."
@@ -84,7 +83,7 @@ class AuthController extends Controller
 
             $otp = $user->generateOTP();
             $user->update(['otp' => $otp]);
-            
+
             Mail::to($user->email)->send(new OtpMail($otp));
 
             // Return success response
@@ -248,9 +247,6 @@ class AuthController extends Controller
             // Attempt to get the user from the request
             $user = $request->user();
 
-            // Log user data
-            Log::info("User Data: " . json_encode($user));
-
             // Check if the user has the 'user' role
             if (!$user || !$user->hasRole('user')) {
                 Log::info("User not verified or not found for OTP verification");
@@ -259,27 +255,16 @@ class AuthController extends Controller
 
             $otp = $request->input('otp');
 
-            // Log received OTP
-            Log::info("Received OTP for user {$user->id}: $otp");
-
             // Compare OTP
             if ($otp == $user->otp) {
                 // Mark the user as verified
                 $user->update(['verified' => true]);
 
-                // Log successful OTP verification
-                Log::info("OTP verified successfully for user {$user->id}");
-
                 return response()->json(['message' => 'OTP verified successfully']);
             }
 
-            // Log failed OTP verification
-            Log::info("Invalid OTP for user {$user->id}. Stored OTP: {$user->otp}");
-
             return response()->json(['error' => 'Invalid OTP'], 401);
         } catch (\Exception $exception) {
-            // Log any exception that occurs
-            Log::error("Exception: " . $exception->getMessage());
             return response()->json(['error' => 'An error occurred during OTP verification'], 500);
         }
     }
@@ -386,6 +371,34 @@ class AuthController extends Controller
         ]);
 
         return response()->json(['message' => 'Password changed successfully']);
+    }
+
+    public function changePasswordApp(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:8',
+            'confirm_password' => 'required|same:new_password',
+        ]);
+
+        $user = Auth::user();
+
+        // Check if the current password matches
+        if (!Hash::check($request->input('current_password'), $user->password)) {
+            return response()->json(['success' => false, 'message' => 'Current password is incorrect'], 401);
+        }
+
+        try {
+            // Update the user's password
+            $user->update([
+                'password' => Hash::make($request->input('new_password')),
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Password changed successfully']);
+        } catch (\Exception $e) {
+            // Handle any errors that occur during the password update
+            return response()->json(['success' => false, 'message' => 'An error occurred while changing the password'], 500);
+        }
     }
 
     public function logout(Request $request)
