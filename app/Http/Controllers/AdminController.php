@@ -115,9 +115,9 @@ class AdminController extends Controller
     }
 
 
-        // If not an admin, return an error response
-        return response()->json(['error' => 'Unauthorized'], 403);
-    }
+    //     // If not an admin, return an error response
+    //     return response()->json(['error' => 'Unauthorized'], 403);
+    // }
 
 
     public function verifyEmail(Request $request)
@@ -216,7 +216,7 @@ class AdminController extends Controller
 
     public function getAllServicesApp()
     {
-        $allowedCategoryTypes = ['popular', 'most_demanding', 'normal'];
+        $allowedCategoryTypes = ['popular', 'most_demanding'];
         $result = [];
 
         try {

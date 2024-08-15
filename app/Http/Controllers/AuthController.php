@@ -422,69 +422,131 @@ class AuthController extends Controller
     }
 
 
-public function updateProfile(Request $request, User $user)
-{
-    try {
-        // Ensure the user exists, or throw a 404 exception
-        $user = User::findOrFail($user->id);
+    public function updateProfile(Request $request, User $user)
+    {
+        try {
+            // Ensure the user exists, or throw a 404 exception
+            $user = User::findOrFail($user->id);
 
-        // Check if the logged-in user is an admin or updating their own profile
-        $loggedInUser = $request->user();
+            // Check if the logged-in user is an admin or updating their own profile
+            $loggedInUser = $request->user();
 
-        if ($loggedInUser->hasRole('admin') || $loggedInUser->id === $user->id) {
-            // Allow admins to update any user's profile
-            // Allow users and agents to update their own profiles
-            // If you have more roles, adjust the condition accordingly
+            if ($loggedInUser->hasRole('admin') || $loggedInUser->id === $user->id) {
+                // Allow admins to update any user's profile
+                // Allow users and agents to update their own profiles
+                // If you have more roles, adjust the condition accordingly
 
-            $rules = [
-                'name' => 'required|string|max:255',
-                'phone' => 'required|string|max:255',
-                'profile_photo_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            ];
+                $rules = [
+                    'name' => 'required|string|max:255',
+                    'phone' => 'required|string|max:255',
+                    'profile_photo_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                ];
 
-            // Allow admins to update email
-            if ($loggedInUser->hasRole('admin')) {
-                $rules['email'] = 'required|string|email|max:255|unique:users,email,' . $user->id;
+                // Allow admins to update email
+                if ($loggedInUser->hasRole('admin')) {
+                    $rules['email'] = 'required|string|email|max:255|unique:users,email,' . $user->id;
+                }
+
+                // Include password validation if it's provided in the request
+                if ($request->filled('password')) {
+                    $rules['password'] = 'required|string|min:8';
+                }
+
+                $request->validate($rules);
+
+                // Update the user's profile fields
+                $user->update($request->except('password'));
+
+                // Update the password if provided
+                if ($request->filled('password')) {
+                    $user->update(['password' => Hash::make($request->input('password'))]);
+                }
+
+                return response()->json(['message' => 'Profile updated successfully']);
             }
 
-            // Include password validation if it's provided in the request
-            if ($request->filled('password')) {
-                $rules['password'] = 'required|string|min:8';
+            return response()->json(['error' => 'Unauthorized access'], 403);
+        } catch (ValidationException $validationException) {
+            return response()->json(['error' => $validationException->errors()], 422);
+        } catch (ModelNotFoundException $modelNotFoundException) {
+            return response()->json(['error' => 'User not found'], 404);
+        } catch (QueryException $queryException) {
+            $errorCode = $queryException->errorInfo[1];
+
+            if ($errorCode == 1062) {
+                // Duplicate entry error (SQLSTATE[23000])
+                return response()->json(['error' => 'Email address already exists. Please choose a different one.'], 422);
             }
 
-            $request->validate($rules);
-
-            // Update the user's profile fields
-            $user->update($request->except('password'));
-
-            // Update the password if provided
-            if ($request->filled('password')) {
-                $user->update(['password' => Hash::make($request->input('password'))]);
-            }
-
-            return response()->json(['message' => 'Profile updated successfully']);
+            // Other database-related errors
+            return response()->json(['error' => $queryException->getMessage()], 500);
+        } catch (\Exception $exception) {
+            return response()->json(['error' => $exception->getMessage()], 500);
         }
-
-        return response()->json(['error' => 'Unauthorized access'], 403);
-    } catch (ValidationException $validationException) {
-        return response()->json(['error' => $validationException->errors()], 422);
-    } catch (ModelNotFoundException $modelNotFoundException) {
-        return response()->json(['error' => 'User not found'], 404);
-    } catch (QueryException $queryException) {
-        $errorCode = $queryException->errorInfo[1];
-
-        if ($errorCode == 1062) {
-            // Duplicate entry error (SQLSTATE[23000])
-            return response()->json(['error' => 'Email address already exists. Please choose a different one.'], 422);
-        }
-
-        // Other database-related errors
-        return response()->json(['error' => $queryException->getMessage()], 500);
-    } catch (\Exception $exception) {
-        return response()->json(['error' => $exception->getMessage()], 500);
     }
-}
 
+    public function updateProfileApp(Request $request, User $user)
+    {
+        try {
+            // Ensure the user exists, or throw a 404 exception
+            $user = User::findOrFail($user->id);
+
+            // Check if the logged-in user is an admin or updating their own profile
+            $loggedInUser = $request->user();
+
+            if ($loggedInUser->hasRole('admin') || $loggedInUser->id === $user->id) {
+                // Allow admins to update any user's profile
+                // Allow users and agents to update their own profiles
+                // If you have more roles, adjust the condition accordingly
+
+                $rules = [
+                    'name' => 'required|string|max:255',
+                    'phone' => 'required|string|max:255',
+                    'profile_photo_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                ];
+
+                // Allow admins to update email
+                if ($loggedInUser->hasRole('admin')) {
+                    $rules['email'] = 'required|string|email|max:255|unique:users,email,' . $user->id;
+                }
+
+                // Include password validation if it's provided in the request
+                if ($request->filled('password')) {
+                    $rules['password'] = 'required|string|min:8';
+                }
+
+                $request->validate($rules);
+
+                // Update the user's profile fields
+                $user->update($request->except('password'));
+
+                // Update the password if provided
+                if ($request->filled('password')) {
+                    $user->update(['password' => Hash::make($request->input('password'))]);
+                }
+
+                return response()->json(['success' => true,'message' => 'Profile updated successfully']);
+            }
+
+            return response()->json(['success' => false,'message' => 'Unauthorized access'], 403);
+        } catch (ValidationException $validationException) {
+            return response()->json(['success' => false,'message' => $validationException->errors()], 422);
+        } catch (ModelNotFoundException $modelNotFoundException) {
+            return response()->json(['success' => false,'message' => 'User not found'], 404);
+        } catch (QueryException $queryException) {
+            $errorCode = $queryException->errorInfo[1];
+
+            if ($errorCode == 1062) {
+                // Duplicate entry error (SQLSTATE[23000])
+                return response()->json(['success' => false,'message' => 'Email address already exists. Please choose a different one.'], 422);
+            }
+
+            // Other database-related errors
+            return response()->json(['success' => false,'message' => $queryException->getMessage()], 500);
+        } catch (\Exception $exception) {
+            return response()->json(['success' => false,'message' => $exception->getMessage()], 500);
+        }
+    }
 
 
 

@@ -26,8 +26,8 @@ Route::post('/register', [AuthController::class, 'register']);
 
 // User login
 Route::post('/login', [AuthController::class, 'login'])->name('login');
-// Mobile App
 
+// Mobile App
 Route::prefix('mobile')->group(function () {
     Route::post('/register', [AuthController::class, 'registerApp']);
     Route::post('/login', [AuthController::class, 'loginApp'])->name('login.app');
@@ -39,10 +39,15 @@ Route::prefix('mobile')->group(function () {
 // Routes requiring authentication and email verification
 Route::middleware('auth:sanctum', 'verified')->prefix('mobile')->group(function () {
     Route::post('/change-password', [AuthController::class, 'changePasswordApp']);
-
+    Route::put('/profile/{user}', [AuthController::class, 'updateProfileApp']);
     Route::middleware('role:admin')->group(function () {
         // Register an agent
         Route::post('/admin/register-agent', [AdminController::class, 'registerAgentApp']);
+    });
+
+    // Get authenticated user details
+    Route::get('/user', function (Request $request) {
+        return $request->user();
     });
 });
 // Send reset password email
