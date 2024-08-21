@@ -55,15 +55,18 @@ class AuthController extends Controller
 
     public function registerApp(RegisterUserRequest $request)
     {
+    
         try {
+            
             // Check if a user with the same email already exists
             $existingUser = User::where('email', $request->input('email'))->first();
-
+            Log::info("Existring $existingUser");
             if ($existingUser) {
+                Log::info("Existring $existingUser");
                 return response()->json([
                     "success" => false,
                     "message" => "A user with this email address is already registered."
-                ], 409); // 409 Conflict
+                ], 409);
             }
 
             // Create a new user
@@ -93,6 +96,7 @@ class AuthController extends Controller
                 'message' => 'Registration successful! Please check your email for the OTP.'
             ], 201);
         } catch (\Exception $e) {
+            Log::info("Registration failed $e");
             return response()->json([
                 "success" => false,
                 "message" => "Registration failed. Please try again later."

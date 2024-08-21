@@ -25,12 +25,12 @@ Route::get('/generate-token', function () {
 Route::post('/register', [AuthController::class, 'register']);
 
 // User login
-Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('web.login');
 
 // Mobile App
 Route::prefix('mobile')->group(function () {
     Route::post('/register', [AuthController::class, 'registerApp']);
-    Route::post('/logins', [AuthController::class, 'loginApp'])->name('login.app');
+    Route::post('/logins', [AuthController::class, 'loginApp'])->name('mobile.login');
     Route::post('/verify-otp', [AuthController::class, 'verifyOtpApp']);
     Route::post('/verify-email', [AuthController::class, 'verifyEmailApp']);
     Route::get('/admin/services', [AdminController::class, 'getAllServicesApp']);
