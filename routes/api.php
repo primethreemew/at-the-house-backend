@@ -34,6 +34,8 @@ Route::prefix('mobile')->group(function () {
     Route::post('/verify-otp', [AuthController::class, 'verifyOtpApp']);
     Route::post('/verify-email', [AuthController::class, 'verifyEmailApp']);
     Route::get('/admin/services', [AdminController::class, 'getAllServicesApp']);
+    Route::get('/admin/recommended', [AdminController::class, 'getAllRecommended']);
+    Route::get('/admin/relevantsearch/{categoryname}', [AdminController::class, 'getAllRelevantSearch']);
 });
 
 // Routes requiring authentication and email verification

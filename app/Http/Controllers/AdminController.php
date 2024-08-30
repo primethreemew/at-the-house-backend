@@ -216,7 +216,7 @@ class AdminController extends Controller
 
     public function getAllServicesApp()
     {
-        $allowedCategoryTypes = ['popular', 'most_demanding'];
+        $allowedCategoryTypes = ['normal','popular', 'most_demanding'];
         $result = [];
 
         try {
@@ -233,7 +233,31 @@ class AdminController extends Controller
         }
     }
 
+    public function getAllRecommended()
+    {
+        $allowedCategoryTypes = ['normal','popular', 'most_demanding'];
+        $result = [];
 
+        try {
+            $recommended = DB::select("SELECT category_name FROM services");
+            // Return all services grouped by category type
+            return response()->json(['success' => true, 'recommended' => $recommended]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'An error occurred while retrieving categories', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAllRelevantSearch($categoryname){
+        $relevantCatId = DB::table('services')
+                          ->where('category_name', $categoryname)
+                          ->value('id');
+
+        $relevantServices = DB::table('agent_services')
+                          ->where('category_id', $relevantCatId)->get();
+        //$relevantServices = DB::select("SELECT * FROM agent_services");
+        // Return a JSON response with the success status and the list of ids
+        return response()->json(['success' => true, 'services' => $relevantServices]);
+    }
 
     public function updateService(Request $request, $serviceId)
     {
