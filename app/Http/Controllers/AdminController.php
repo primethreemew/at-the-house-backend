@@ -254,8 +254,7 @@ class AdminController extends Controller
 
         $relevantServices = DB::table('agent_services')
                           ->where('category_id', $relevantCatId)->get();
-        //$relevantServices = DB::select("SELECT * FROM agent_services");
-        // Return a JSON response with the success status and the list of ids
+                          
         return response()->json(['success' => true, 'services' => $relevantServices]);
     }
 

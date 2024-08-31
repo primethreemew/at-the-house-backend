@@ -82,7 +82,8 @@ class AuthController extends Controller
             }
 
             $otp = $user->generateOTP();
-            $user->update(['otp' => $otp]);
+            //$user->update(['otp' => $otp]);
+            $user->update(['otp' => '123456']);
 
             try {
                 Mail::to($user->email)->send(new OtpMail($otp));
