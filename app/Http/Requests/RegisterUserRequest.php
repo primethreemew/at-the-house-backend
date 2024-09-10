@@ -14,6 +14,11 @@ class RegisterUserRequest extends FormRequest
         return true;
     }
 
+    public function wantsJson()
+    {
+        return true;  // Always return JSON response
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -23,7 +28,7 @@ class RegisterUserRequest extends FormRequest
     {
         return [
             'name' => 'required',
-            'email' => 'required|email|unique:users',
+            'email' => 'required|email',
             // 'phone' => 'required|regex:/^\+(?:[0-9]●?){6,14}[0-9]$/|unique:users',
             'password' => 'required|min:8',
         ];
@@ -34,10 +39,16 @@ class RegisterUserRequest extends FormRequest
      *
      * @return array
      */
-    public function messages()
+    public function messages(): array
     {
         return [
-            // 'phone.regex' => 'The phone number must be a valid international phone number with a leading "+" sign.',
+            'name.required' => 'The name field is required.',
+            'email.required' => 'The email field is required.',
+            'email.email' => 'The email must be a valid email address.',
+            'email.unique' => 'The email has already been taken.',
+            'phone.regex' => 'The phone number must be a valid international phone number with a leading "+" sign.',
+            'password.required' => 'The password field is required.',
+            'password.min' => 'The password must be at least 8 characters long.',
         ];
     }
 }

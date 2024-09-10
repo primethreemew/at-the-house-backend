@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
@@ -26,5 +27,19 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    public function render($request, Throwable $exception)
+    {
+        if ($exception instanceof ValidationException) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'The given data was invalid.',
+                    'errors' => $exception->errors()
+                ], 422);
+            }
+        }
+
+        return parent::render($request, $exception);
     }
 }

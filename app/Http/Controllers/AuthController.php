@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\JsonResponse;
+
 
 class AuthController extends Controller
 {
@@ -53,16 +56,46 @@ class AuthController extends Controller
         return response()->json(['message' => 'OTP sent successfully'], 201);
     }
 
-    public function registerApp(RegisterUserRequest $request)
+    public function registerApp(Request $request): JsonResponse
     {
+        // Define custom validation messages
+        $messages = [
+            'name.required' => 'The name field is required.',
+            'email.required' => 'The email field is required.',
+            'email.email' => 'The email must be a valid email address.',
+            'email.unique' => 'The email has already been taken.',
+            'password.required' => 'The password field is required.',
+            'password.min' => 'The password must be at least 8 characters long.',
+        ];
+
+        // Define validation rules
+        $rules = [
+            'name' => 'required',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8',
+        ];
+
+        // Create a validator instance
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        // Check if validation fails
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 400,
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 400);
+        }
+
         try {
             // Check if a user with the same email already exists
             $existingUser = User::where('email', $request->input('email'))->first();
-            
+
             if ($existingUser) {
                 return response()->json([
-                    "success" => false,
-                    "message" => "A user with this email address is already registered."
+                    'status' => 409,
+                    'success' => false,
+                    'message' => 'A user with this email address is already registered.',
                 ], 409);
             }
 
@@ -82,33 +115,31 @@ class AuthController extends Controller
             }
 
             $otp = $user->generateOTP();
-            //$user->update(['otp' => $otp]);
-            $user->update(['otp' => '123456']);
+            $user->update(['otp' => $otp]);
 
             try {
                 Mail::to($user->email)->send(new OtpMail($otp));
-            }catch (\Exception $e) {
-                Log::info("Registration Mail send $e");
+            } catch (\Exception $e) {
+                Log::info("Registration Mail send failed: $e");
             }
-            
+
             // Return success response
             return response()->json([
-                "success" => true,
-                "userId" => $user->id,
-                'message' => 'Registration successful! Please check your email for the OTP.'
-            ], 201);
+                'status' => 200,
+                'success' => true,
+                'userId' => $user->id,
+                'message' => 'Registration successful! Please check your email for the OTP.',
+            ], 200);
+
         } catch (\Exception $e) {
-            Log::info("Registration failed $e");
+            Log::info("Registration failed: $e");
             return response()->json([
-                "success" => false,
-                "message" => "Registration failed. Please try again later. " . $e->getMessage()
+                'status' => 500,
+                'success' => false,
+                'message' => 'Registration failed. Please try again later. ' . $e->getMessage(),
             ], 500);
         }
     }
-
-
-
-
 
 
     public function verifyEmail(Request $request)
