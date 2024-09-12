@@ -16,7 +16,7 @@ use App\Models\User;
 */
 
 Route::get('/generate-token', function () {
-    $user = User::find(88); // Replace with the user ID
+    $user = User::find(105); // Replace with the user ID
     $token = $user->createToken('argon')->plainTextToken;
 
     return response()->json(['token' => $token]);

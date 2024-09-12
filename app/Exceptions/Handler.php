@@ -31,15 +31,14 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $exception)
     {
-        if ($exception instanceof ValidationException) {
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'message' => 'The given data was invalid.',
-                    'errors' => $exception->errors()
-                ], 422);
-            }
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage()
+            ], 500);
         }
 
         return parent::render($request, $exception);
     }
+
 }

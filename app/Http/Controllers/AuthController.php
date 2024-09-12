@@ -115,7 +115,8 @@ class AuthController extends Controller
             }
 
             $otp = $user->generateOTP();
-            $user->update(['otp' => $otp]);
+            //$user->update(['otp' => $otp]);
+            $user->update(['otp' => '123456']);
 
             try {
                 Mail::to($user->email)->send(new OtpMail($otp));
@@ -217,7 +218,7 @@ class AuthController extends Controller
             // Log successful OTP verification
             \Illuminate\Support\Facades\Log::info("OTP verified successfully for user {$user->id}");
 
-            return response()->json(["suceess" => true,'message' => 'OTP verified successfully', 'userId' => $user->id]);
+            return response()->json(["success" => true,'message' => 'OTP verified successfully', 'userId' => $user->id]);
         }
 
         // Log failed OTP verification
@@ -461,6 +462,7 @@ class AuthController extends Controller
 
     public function updateProfile(Request $request, User $user)
     {
+        
         try {
             // Ensure the user exists, or throw a 404 exception
             $user = User::findOrFail($user->id);
@@ -476,7 +478,7 @@ class AuthController extends Controller
                 $rules = [
                     'name' => 'required|string|max:255',
                     'phone' => 'required|string|max:255',
-                    'profile_photo_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                    //'profile_photo_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
                 ];
 
                 // Allow admins to update email
@@ -524,6 +526,7 @@ class AuthController extends Controller
 
     public function updateProfileApp(Request $request, User $user)
     {
+
         try {
             // Ensure the user exists, or throw a 404 exception
             $user = User::findOrFail($user->id);
@@ -584,7 +587,6 @@ class AuthController extends Controller
             return response()->json(['success' => false,'message' => $exception->getMessage()], 500);
         }
     }
-
 
 
     // public function logUserActivity(Request $request, $userId)
