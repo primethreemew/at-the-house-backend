@@ -90,6 +90,42 @@ class ServiceController extends Controller
         return response()->json(['services' => $services]);
     }
 
+    public function getAgentServicesApp()
+    {
+        $user = Auth::user();
+
+        if ($user->hasRole('agent')) {
+            $services = AgentService::where('user_id', $user->id)->get();
+        } elseif ($user->hasRole('admin')) {
+            $services = AgentService::all();
+        } else {
+            return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+        }
+
+        return response()->json(['success' => true, 'services' => $services]);
+    }
+
+    public function getAgentServiceApp($id)
+    {
+        $user = Auth::user();
+
+        try { 
+            $service = AgentService::findOrFail($id);
+
+            if ($user->hasRole('agent') && $service->user_id == $user->id) {
+                // Agent can retrieve their own service
+            } elseif ($user->hasRole('admin') || $user->hasRole('user')) {
+                // Admin and User can retrieve any service
+            } else {
+                return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+            }
+
+            return response()->json(['success' => true, 'service' => $service]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'error' => 'Service not found'], 404);
+        }
+    }
+
     /**
      * Get a specific agent service by ID.
      *

@@ -46,7 +46,7 @@ Route::middleware('auth:sanctum', 'verified')->prefix('mobile')->group(function 
         // Register an agent
         Route::post('/admin/register-agent', [AdminController::class, 'registerAgentApp']);
     });
-
+    Route::get('/agent-services/{id}', [ServiceController::class, 'getAgentServiceApp']);
     // Get authenticated user details
     Route::get('/user', function (Request $request) {
         return $request->user();

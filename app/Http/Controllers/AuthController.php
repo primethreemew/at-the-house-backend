@@ -528,39 +528,30 @@ class AuthController extends Controller
     {
 
         try {
-            // Ensure the user exists, or throw a 404 exception
             $user = User::findOrFail($user->id);
 
-            // Check if the logged-in user is an admin or updating their own profile
             $loggedInUser = $request->user();
 
             if ($loggedInUser->hasRole('admin') || $loggedInUser->id === $user->id) {
-                // Allow admins to update any user's profile
-                // Allow users and agents to update their own profiles
-                // If you have more roles, adjust the condition accordingly
-
+ 
                 $rules = [
                     'name' => 'required|string|max:255',
                     'phone' => 'required|string|max:255',
                     'profile_photo_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
                 ];
 
-                // Allow admins to update email
                 if ($loggedInUser->hasRole('admin')) {
                     $rules['email'] = 'required|string|email|max:255|unique:users,email,' . $user->id;
                 }
 
-                // Include password validation if it's provided in the request
                 if ($request->filled('password')) {
                     $rules['password'] = 'required|string|min:8';
                 }
 
                 $request->validate($rules);
 
-                // Update the user's profile fields
                 $user->update($request->except('password'));
 
-                // Update the password if provided
                 if ($request->filled('password')) {
                     $user->update(['password' => Hash::make($request->input('password'))]);
                 }
@@ -577,11 +568,9 @@ class AuthController extends Controller
             $errorCode = $queryException->errorInfo[1];
 
             if ($errorCode == 1062) {
-                // Duplicate entry error (SQLSTATE[23000])
                 return response()->json(['success' => false,'message' => 'Email address already exists. Please choose a different one.'], 422);
             }
 
-            // Other database-related errors
             return response()->json(['success' => false,'message' => $queryException->getMessage()], 500);
         } catch (\Exception $exception) {
             return response()->json(['success' => false,'message' => $exception->getMessage()], 500);

@@ -38,6 +38,10 @@ class Handler extends ExceptionHandler
             ], 500);
         }
 
+        if ($exception instanceof \Illuminate\Auth\AuthenticationException) {
+            return response()->json(['error' => 'Invalid or missing token. Please log in.'], 401);
+        }
+        
         return parent::render($request, $exception);
     }
 
