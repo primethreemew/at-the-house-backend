@@ -327,5 +327,23 @@ class AdminController extends Controller
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
+    public function viewServiceApp($serviceId)
+    {
+        // Check if the authenticated user is an admin
+        if (Auth::user()->roles->contains('name', 'admin')) {
+            // Find the service by ID
+            $service = Service::find($serviceId);
+
+            if (!$service) {
+                return response()->json(['error' => 'Service not found'], 404);
+            }
+
+            return response()->json(['service' => $service]);
+        }
+
+        // If not an admin, return an error response
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
     
 } 

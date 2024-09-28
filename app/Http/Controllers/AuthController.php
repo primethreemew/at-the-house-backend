@@ -526,7 +526,6 @@ class AuthController extends Controller
 
     public function updateProfileApp(Request $request, User $user)
     {
-
         try {
             $user = User::findOrFail($user->id);
 
@@ -558,7 +557,6 @@ class AuthController extends Controller
 
                 return response()->json(['success' => true,'message' => 'Profile updated successfully']);
             }
-
             return response()->json(['success' => false,'message' => 'Unauthorized access'], 403);
         } catch (ValidationException $validationException) {
             return response()->json(['success' => false,'message' => $validationException->errors()], 422);
@@ -566,11 +564,9 @@ class AuthController extends Controller
             return response()->json(['success' => false,'message' => 'User not found'], 404);
         } catch (QueryException $queryException) {
             $errorCode = $queryException->errorInfo[1];
-
             if ($errorCode == 1062) {
                 return response()->json(['success' => false,'message' => 'Email address already exists. Please choose a different one.'], 422);
             }
-
             return response()->json(['success' => false,'message' => $queryException->getMessage()], 500);
         } catch (\Exception $exception) {
             return response()->json(['success' => false,'message' => $exception->getMessage()], 500);

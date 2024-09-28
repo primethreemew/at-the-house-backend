@@ -29,13 +29,36 @@ Route::post('/login', [AuthController::class, 'login'])->name('web.login');
 
 // Mobile App
 Route::prefix('mobile')->group(function () {
+    //change forgot password
+    Route::post('/password-reset/send-otp', [PasswordResetController::class, 'sendOtp']);
+    Route::post('/password-reset/verify-otp', [PasswordResetController::class, 'verifyOtp']);
+    Route::post('/password-reset/change-password', [PasswordResetController::class, 'changePassword']);
+
     Route::post('/register', [AuthController::class, 'registerApp']);
     Route::post('/logins', [AuthController::class, 'loginApp'])->name('mobile.login');
     Route::post('/verify-otp', [AuthController::class, 'verifyOtpApp']);
     Route::post('/verify-email', [AuthController::class, 'verifyEmailApp']);
     Route::get('/admin/services', [AdminController::class, 'getAllServicesApp']);
+    Route::get('/admin/services/{serviceId}', [AdminController::class, 'viewServiceApp']);
     Route::get('/admin/recommended', [AdminController::class, 'getAllRecommended']);
     Route::get('/admin/relevantsearch/{categoryname}', [AdminController::class, 'getAllRelevantSearch']);
+    Route::get('/agent-services', [ServiceController::class, 'getAllAgentServices']);
+    Route::middleware('role:admin|agent')->group(function () {
+        // Admin and Agent route to create agent service
+        Route::post('/agent-services/create', [ServiceController::class, 'agentServiceCreate']);
+
+        // Retrieve all agent's services
+       // Route::get('/agent-services', [ServiceController::class, 'getAllAgentServices']);
+
+        // Retrieve a specific agent's service by ID
+        Route::get('/agent-services/{id}', [ServiceController::class, 'getAgentService']);
+
+        // Update a specific agent's service by ID
+        Route::put('/agent-services/{id}/update', [ServiceController::class, 'updateAgentService']);
+
+        // Delete a specific agent's service by ID
+        Route::delete('/agent-services/{id}/delete', [ServiceController::class, 'deleteAgentService']);
+    });
 });
 
 // Routes requiring authentication and email verification
