@@ -11,12 +11,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 // use Illuminate\Support\Facades\Gate;
-// use App\Models\AgentService;
+use App\Models\AgentService;
 use Illuminate\Support\Facades\DB;
 
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Service;
+use App\Models\Referral;
 
 class AdminController extends Controller
 {
@@ -344,6 +345,121 @@ class AdminController extends Controller
         // If not an admin, return an error response
         return response()->json(['error' => 'Unauthorized'], 403);
     }
-
     
+    public function submitReferral($serviceId)
+    {
+        // Get the authenticated user
+        $user = Auth::user();
+        
+        // Check if the user is authenticated
+        if (!$user) {
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
+
+        // Find the service by ID
+        $service = AgentService::find($serviceId);
+
+        // Check if the service exists
+        if (!$service) {
+            return response()->json(['error' => 'Service not found'], 404);
+        } 
+
+        try {
+            // Insert the referral into the database
+            $referral = DB::table('referrals')->insert([
+                'referrer_id' => $user->id, 
+                'agent_service_id' => $serviceId, 
+                'status' => 'pending', 
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Return success response
+            return response()->json([
+                'message' => 'Your Referral has been submitted. Our tem At the House App will act on your referral on priority',
+                'referral' => $referral,
+                'success' => true
+            ], 201);
+
+        } catch (\Exception $e) {
+            // Return error response if insertion fails
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to submit referral',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+   
+    public function allReferrals()
+    {
+        //$referrals = Referral::all();
+        $referrals = DB::table('referrals')
+            ->join('agent_services', 'referrals.agent_service_id', '=', 'agent_services.id')
+            ->select('referrals.*', 'agent_services.service_name as service_name', 'agent_services.short_description as short_description', 'agent_services.message_number as message_number', 'agent_services.phone_number as phone_number')
+            ->get();
+        
+        return response()->json(['success' => true, 'services' => $referrals]);
+    }
+
+    public function allReferralsApp()
+    {
+        try {
+            // Get the authenticated user
+            $user = Auth::user();
+
+            // Check if the user is authenticated
+            if (!$user) {
+                return response()->json(['message' => 'User not authenticated', 'success' => false], 401);
+            }
+
+            // Query to get referrals with 'approved' status and matching referrer_id
+            $referrals = DB::table('referrals')
+                ->join('agent_services', 'referrals.agent_service_id', '=', 'agent_services.id')
+                ->select(
+                    'referrals.*', 
+                    'agent_services.service_name as service_name', 
+                    'agent_services.short_description as short_description', 
+                    'agent_services.message_number as message_number', 
+                    'agent_services.phone_number as phone_number'
+                )
+                ->where('referrals.status', 'approved')
+                ->where('referrals.referrer_id', $user->id) // Check if referrer_id matches the user's id
+                ->get();
+
+            // Check if no referrals are found
+            if ($referrals->isEmpty()) {
+                return response()->json(['message' => 'No referrals found', 'success' => false], 404);
+            }
+
+            return response()->json(['success' => true, 'services' => $referrals]);
+            
+        } catch (\Exception $e) {
+            // Catch any unexpected errors and return a generic error response
+            return response()->json(['message' => 'An error occurred: ' . $e->getMessage(), 'success' => false], 500);
+        }
+    }
+
+    public function statusChange(Request $request, $referralId)
+    {
+        
+        $referral = Referral::find($referralId);
+
+        if (!$referral) {
+            return response()->json(['error' => 'Referral not found'], 404);
+        }
+    
+        $validatedData = $request->validate([
+            'status' => 'required|string|in:pending,approved,denied',
+        ]);
+    
+        $referral->status = $validatedData['status'];
+    
+        if ($referral->save()) {
+            return response()->json(['message' => 'Referral status updated successfully.', 'referral' => $referral, 'success' => true], 200);
+        }
+    
+        return response()->json(['error' => 'Failed to update referral status'], 500);
+    }
+
 } 

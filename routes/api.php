@@ -43,6 +43,7 @@ Route::prefix('mobile')->group(function () {
     Route::get('/admin/recommended', [AdminController::class, 'getAllRecommended']);
     Route::get('/admin/relevantsearch/{categoryname}', [AdminController::class, 'getAllRelevantSearch']);
     Route::get('/agent-services', [ServiceController::class, 'getAllAgentServices']);
+    //Route::put('/referral/{serviceId}', [AdminController::class, 'submitReferral']);
     Route::middleware('role:admin|agent')->group(function () {
         // Admin and Agent route to create agent service
         Route::post('/agent-services/create', [ServiceController::class, 'agentServiceCreate']);
@@ -61,8 +62,10 @@ Route::prefix('mobile')->group(function () {
     });
 });
 
+
 // Routes requiring authentication and email verification
 Route::middleware('auth:sanctum', 'verified')->prefix('mobile')->group(function () {
+    
     Route::post('/change-password', [AuthController::class, 'changePasswordApp']);
     Route::put('/profile/{user}', [AuthController::class, 'updateProfileApp']);
     Route::middleware('role:admin')->group(function () {
@@ -74,6 +77,9 @@ Route::middleware('auth:sanctum', 'verified')->prefix('mobile')->group(function 
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+    Route::put('/referral/{serviceId}', [AdminController::class, 'submitReferral']);
+    Route::get('/referrals', [AdminController::class, 'allReferralsApp']);
+
 });
 // Send reset password email
 Route::post('/send-reset-password-email', [PasswordResetController::class, 'send_reset_password_email']);
@@ -100,7 +106,7 @@ Route::get('/admin/services', [AdminController::class, 'getAllServices']);
 */
 
 Route::middleware('auth:sanctum','verified')->group(function () {
-
+    
     // Get authenticated user details
     Route::get('/user', function (Request $request) {
         return $request->user();
@@ -113,6 +119,8 @@ Route::middleware('auth:sanctum','verified')->group(function () {
 
     // Routes for admin
     Route::middleware('role:admin')->group(function () {
+        Route::get('/referrals', [AdminController::class, 'allReferrals']);
+        Route::put('/referrals/{referralId}', [AdminController::class, 'statusChange']);
         // Register an agent
         Route::post('/admin/register-agent', [AdminController::class, 'registerAgent']);
 
