@@ -81,6 +81,7 @@ Route::middleware('auth:sanctum', 'verified')->prefix('mobile')->group(function 
     Route::get('/referrals', [AdminController::class, 'allReferralsApp']);
 
 });
+
 // Send reset password email
 Route::post('/send-reset-password-email', [PasswordResetController::class, 'send_reset_password_email']);
 

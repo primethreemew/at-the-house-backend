@@ -421,7 +421,9 @@ class AdminController extends Controller
                     'agent_services.service_name as service_name', 
                     'agent_services.short_description as short_description', 
                     'agent_services.message_number as message_number', 
-                    'agent_services.phone_number as phone_number'
+                    'agent_services.phone_number as phone_number',
+                    'agent_services.featured_image as featured_image',
+                    'agent_services.banner_image as banner_image',
                 )
                 ->where('referrals.status', 'approved')
                 ->where('referrals.referrer_id', $user->id) // Check if referrer_id matches the user's id
