@@ -21,7 +21,7 @@ class PasswordResetController extends Controller
         $request->validate(['email' => 'required|email']);
 
         $email = $request->email;
-        $otp = '1234'; // static OTP for testing
+        $otp = '123456'; // static OTP for testing
         $expiresAt = Carbon::now()->addMinutes(5); // OTP expires in 5 minutes
         Log::info("Generated OTP for user $email");
 
