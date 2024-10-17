@@ -206,12 +206,19 @@ class AdminController extends Controller
         $result = [];
 
         foreach ($allowedCategoryTypes as $categoryType) {
-            // Retrieve services for the current category type using raw SQL
-            $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
+            // Retrieve agent services for the current category type using a join between agent_services and services
+            $services = DB::select("
+                SELECT agent_services.*, services.category_name
+                FROM agent_services
+                INNER JOIN services ON agent_services.category_id = services.id
+                WHERE services.category_type = ?
+            ", [$categoryType]);
+
+            // Store the services under the appropriate category type
             $result[$categoryType] = $services;
         }
 
-        // Return all services grouped by category type
+        // Return all agent services grouped by category type
         return response()->json(['services' => $result]);
     }
 
