@@ -79,7 +79,7 @@ Route::middleware('auth:sanctum', 'verified')->prefix('mobile')->group(function 
     });
     Route::put('/referral/{serviceId}', [AdminController::class, 'submitReferral']);
     Route::get('/referrals', [AdminController::class, 'allReferralsApp']);
-
+    Route::get('/single-referral/{serviceId}', [AdminController::class, 'singleReferralsApp']);
 });
 
 // Send reset password email

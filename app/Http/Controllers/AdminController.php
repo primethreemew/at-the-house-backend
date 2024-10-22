@@ -449,6 +449,67 @@ class AdminController extends Controller
         }
     }
 
+    public function singleReferralsApp($serviceId)
+    {
+        // Get the authenticated user
+        $user = Auth::user();
+
+        // Check if the user is authenticated
+        if (!$user) {
+            return response()->json(['error' => 'User not authenticated'], 401);
+        }
+
+        // Find the service by ID
+        $service = AgentService::find($serviceId);
+
+        // Check if the service exists
+        if (!$service) {
+            return response()->json(['error' => 'Service not found'], 404);
+        } 
+
+        try {
+            // Fetch the referral data based on user ID and service ID
+            $referral = DB::table('referrals')
+                ->join('agent_services', 'referrals.agent_service_id', '=', 'agent_services.id')
+                ->select(
+                    'referrals.*',
+                    'agent_services.service_name as service_name', 
+                    'agent_services.short_description as short_description', 
+                    'agent_services.message_number as message_number', 
+                    'agent_services.phone_number as phone_number',
+                    'agent_services.featured_image as featured_image',
+                    'agent_services.banner_image as banner_image'
+                )
+                ->where('referrals.referrer_id', $user->id)
+                ->where('referrals.agent_service_id', $serviceId)
+                ->first();
+
+            // Check if a referral exists
+            if (!$referral) {
+                return response()->json([
+                    'message' => 'No referral found for this service',
+                    'success' => false
+                ], 404);
+            }
+
+            // Return the fetched referral data
+            return response()->json([
+                'message' => 'Referral found',
+                'referral' => $referral,
+                'success' => true
+            ], 200);
+
+        } catch (\Exception $e) {
+            // Return error response if fetching fails
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to fetch referral',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
     public function statusChange(Request $request, $referralId)
     {
         
