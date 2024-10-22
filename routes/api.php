@@ -39,6 +39,7 @@ Route::prefix('mobile')->group(function () {
     Route::post('/verify-otp', [AuthController::class, 'verifyOtpApp']);
     Route::post('/verify-email', [AuthController::class, 'verifyEmailApp']);
     Route::get('/admin/services', [AdminController::class, 'getAllServicesApp']);
+    Route::get('/admin/services/{id}', [ServiceController::class, 'getAgentServiceApp']);
     Route::get('/admin/services/{serviceId}', [AdminController::class, 'viewServiceApp']);
     Route::get('/admin/recommended', [AdminController::class, 'getAllRecommended']);
     Route::get('/admin/relevantsearch/{categoryname}', [AdminController::class, 'getAllRelevantSearch']);
@@ -52,7 +53,7 @@ Route::prefix('mobile')->group(function () {
        // Route::get('/agent-services', [ServiceController::class, 'getAllAgentServices']);
 
         // Retrieve a specific agent's service by ID
-        Route::get('/agent-services/{id}', [ServiceController::class, 'getAgentService']);
+       // Route::get('/agent-services/{id}', [ServiceController::class, 'getAgentService']);
 
         // Update a specific agent's service by ID
         Route::put('/agent-services/{id}/update', [ServiceController::class, 'updateAgentService']);
@@ -72,7 +73,7 @@ Route::middleware('auth:sanctum', 'verified')->prefix('mobile')->group(function 
         // Register an agent
         Route::post('/admin/register-agent', [AdminController::class, 'registerAgentApp']);
     });
-    Route::get('/agent-services/{id}', [ServiceController::class, 'getAgentServiceApp']);
+    //Route::get('/agent-services/{id}', [ServiceController::class, 'getAgentServiceApp']);
     // Get authenticated user details
     Route::get('/user', function (Request $request) {
         return $request->user();

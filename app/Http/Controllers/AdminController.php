@@ -224,21 +224,54 @@ class AdminController extends Controller
 
     public function getAllServicesApp()
     {
-        $allowedCategoryTypes = ['normal','popular', 'most_demanding'];
+        // $allowedCategoryTypes = ['normal','popular', 'most_demanding'];
+        // $result = [];
+
+        // try {
+        //     foreach ($allowedCategoryTypes as $categoryType) {
+        //         $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
+        //         $result[$categoryType] = $services;
+        //     }
+
+        //     // Return all services grouped by category type
+        //     return response()->json(['success' => true, 'services' => $result]);
+
+        // } catch (\Exception $e) {
+        //     return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
+        // }
+
+        $allowedCategoryTypes = ['popular', 'most_demanding', 'normal'];
         $result = [];
 
-        try {
-            foreach ($allowedCategoryTypes as $categoryType) {
-                $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
-                $result[$categoryType] = $services;
-            }
+        foreach ($allowedCategoryTypes as $categoryType) {
+            // Retrieve agent services for the current category type using a join between agent_services and services
+            $services = DB::select("
+                SELECT 
+                    agent_services.id, 
+                    agent_services.user_id, 
+                    agent_services.category_id, 
+                    agent_services.service_name, 
+                    agent_services.short_description, 
+                    agent_services.message_number, 
+                    agent_services.phone_number, 
+                    agent_services.hours, 
+                    agent_services.service_type, 
+                    agent_services.created_at, 
+                    agent_services.updated_at, 
+                    services.category_name,
+                    agent_services.featured_image,
+                    agent_services.featured_image as image
+                FROM agent_services
+                INNER JOIN services ON agent_services.category_id = services.id
+                WHERE services.category_type = ?
+            ", [$categoryType]);
 
-            // Return all services grouped by category type
-            return response()->json(['success' => true, 'services' => $result]);
-
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
+            // Store the services under the appropriate category type
+            $result[$categoryType] = $services;
         }
+
+        // Return all agent services grouped by category type
+        return response()->json(['services' => $result]);
     }
 
     public function getAllRecommended()

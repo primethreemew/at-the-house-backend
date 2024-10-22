@@ -112,13 +112,13 @@ class ServiceController extends Controller
         try { 
             $service = AgentService::findOrFail($id);
 
-            if ($user->hasRole('agent') && $service->user_id == $user->id) {
-                // Agent can retrieve their own service
-            } elseif ($user->hasRole('admin') || $user->hasRole('user')) {
-                // Admin and User can retrieve any service
-            } else {
-                return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
-            }
+            // if ($user->hasRole('agent') && $service->user_id == $user->id) {
+            //     // Agent can retrieve their own service
+            // } elseif ($user->hasRole('admin') || $user->hasRole('user')) {
+            //     // Admin and User can retrieve any service
+            // } else {
+            //     return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+            // }
 
             return response()->json(['success' => true, 'service' => $service]);
         } catch (ModelNotFoundException $e) {
