@@ -11,6 +11,7 @@ class AgentService extends Model
 
      protected $fillable = [
         'user_id',
+        'service_type',
         'service_name',
         'short_description',
         'message_number',   

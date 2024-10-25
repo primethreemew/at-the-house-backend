@@ -63,20 +63,37 @@ class User extends Authenticatable implements MustVerifyEmail
         'profile_photo_url',
     ];
 
+    // public function roles()
+    // {
+    //     return $this->belongsToMany(Role::class, );
+    // }
+
+    // public function hasRole($role)
+    // {
+    //     return $this->roles->contains('name', $role);
+    // }
+    
+    
+    // public function hasAnyRole($roles)
+    // {
+    //     return $this->roles->pluck('name')->intersect($roles)->isNotEmpty();
+    // }
+
     public function roles()
     {
-        return $this->belongsToMany(Role::class);
+        return $this->belongsToMany(Role::class, 'role_user');
     }
 
-    public function hasRole($role)
+    // Check if the user has a specific role
+    public function hasRole($roleName)
     {
-        return $this->roles->contains('name', $role);
+        return $this->roles()->where('name', $roleName)->exists();
     }
-    
-    
-    public function hasAnyRole($roles)
+
+    // Check if the user has any of the roles
+    public function hasAnyRole(array $roles)
     {
-        return $this->roles->pluck('name')->intersect($roles)->isNotEmpty();
+        return $this->roles()->whereIn('name', $roles)->exists();
     }
 
       public function agentServices()

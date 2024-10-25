@@ -11,6 +11,7 @@ class CheckRole
     public function handle($request, Closure $next, $role)
     {
         try {
+           // dd($role);
             // Check if the user is authenticated
             $user = $request->user();
             if (!$user) {

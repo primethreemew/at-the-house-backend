@@ -150,7 +150,6 @@ class AdminController extends Controller
         // Ensure the logged-in user is an admin
         $admin = auth()->user();
         if (!$admin || !$admin->hasRole('admin')) {
-            \Illuminate\Support\Facades\Log::info('Unauthorized access: Not an admin');
             return response()->json(['error' => 'Unauthorized access'], 403);
         }
 
@@ -201,78 +200,57 @@ class AdminController extends Controller
 
     public function getAllServices()
     {
-        // Define allowed category types
-        $allowedCategoryTypes = ['popular', 'most_demanding', 'normal'];
+
+        $allowedCategoryTypes = ['normal','popular', 'most_demanding'];
         $result = [];
 
-        foreach ($allowedCategoryTypes as $categoryType) {
-            // Retrieve agent services for the current category type using a join between agent_services and services
-            $services = DB::select("
-                SELECT agent_services.*, services.category_name
-                FROM agent_services
-                INNER JOIN services ON agent_services.category_id = services.id
-                WHERE services.category_type = ?
-            ", [$categoryType]);
+        try {
+            foreach ($allowedCategoryTypes as $categoryType) {
+                $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
+                $result[$categoryType] = $services;
+            }
 
-            // Store the services under the appropriate category type
-            $result[$categoryType] = $services;
+            // Return all services grouped by category type
+            return response()->json(['success' => true, 'services' => $result]);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
         }
-
-        // Return all agent services grouped by category type
-        return response()->json(['services' => $result]);
     }
 
     public function getAllServicesApp()
     {
-        // $allowedCategoryTypes = ['normal','popular', 'most_demanding'];
-        // $result = [];
-
-        // try {
-        //     foreach ($allowedCategoryTypes as $categoryType) {
-        //         $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
-        //         $result[$categoryType] = $services;
-        //     }
-
-        //     // Return all services grouped by category type
-        //     return response()->json(['success' => true, 'services' => $result]);
-
-        // } catch (\Exception $e) {
-        //     return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
-        // }
-
-        $allowedCategoryTypes = ['popular', 'most_demanding', 'normal'];
+        $allowedCategoryTypes = ['normal', 'popular', 'most_demanding'];
         $result = [];
 
-        foreach ($allowedCategoryTypes as $categoryType) {
-            // Retrieve agent services for the current category type using a join between agent_services and services
-            $services = DB::select("
-                SELECT 
-                    agent_services.id, 
-                    agent_services.user_id, 
-                    agent_services.category_id, 
-                    agent_services.service_name, 
-                    agent_services.short_description, 
-                    agent_services.message_number, 
-                    agent_services.phone_number, 
-                    agent_services.hours, 
-                    agent_services.service_type, 
-                    agent_services.created_at, 
-                    agent_services.updated_at, 
-                    services.category_name,
-                    agent_services.featured_image,
-                    agent_services.featured_image as image
-                FROM agent_services
-                INNER JOIN services ON agent_services.category_id = services.id
-                WHERE services.category_type = ?
-            ", [$categoryType]);
+        try {
+            foreach ($allowedCategoryTypes as $categoryType) {
+                $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
 
-            // Store the services under the appropriate category type
-            $result[$categoryType] = $services;
+                // Process each service to prepend the base URL to the image fields
+                foreach ($services as $service) {
+                    // Assuming 'image' is the field name for the image in your services table
+                    if (isset($service->image)) {
+                        $service->image = url('storage/' . $service->image);
+                    }
+                    // If you have a 'featured_image' field, you can also set it
+                    if (isset($service->featured_image)) {
+                        $service->featured_image = url('storage/' . $service->featured_image);
+                    }
+                }
+
+                $result[$categoryType] = $services;
+            }
+
+            // Return all services grouped by category type
+            return response()->json(['success' => true, 'services' => $result]);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
         }
-
-        // Return all agent services grouped by category type
-        return response()->json(['services' => $result]);
     }
+
+
 
     public function getAllRecommended()
     {
@@ -301,26 +279,49 @@ class AdminController extends Controller
 
     public function updateService(Request $request, $serviceId)
     {
+        
         // Check if the authenticated user is an admin
         if (Auth::user()->roles->contains('name', 'admin')) {
             // Validate the request data
             $request->validate([
                 'category_name' => 'required|unique:services,category_name,' . $serviceId,
-                // Add other validation rules for service update
+                'category_type' => 'required',
+                'category_image' => 'nullable|string', // base64 image validation
             ]);
 
             // Find the service by ID
             $service = Service::find($serviceId);
-
             if (!$service) {
                 return response()->json(['error' => 'Service not found'], 404);
             }
 
-            // Update the service
-            $service->update([
+            // Prepare data to update
+            $dataToUpdate = [
                 'category_name' => $request->input('category_name'),
-                // Update other fields as needed
-            ]);
+                'category_type' => $request->input('category_type'),
+            ];
+
+            // Check if a base64 image string or a file upload is provided
+            if ($request->has('category_image')) {
+                $base64Image = $request->input('category_image');
+                
+                // Remove "data:image/png;base64," part if it exists
+                $base64Image = preg_replace('/^data:image\/\w+;base64,/', '', $base64Image);
+                $imageData = base64_decode($base64Image);
+
+                // Define the file name and path
+                $imageName = uniqid() . '.png';  // you can use png or derive from actual image mime type
+                $imagePath = 'images/' . $imageName;
+                
+                // Store image in the storage/app/public/images directory
+                \Storage::disk('public')->put($imagePath, $imageData);
+
+                // Update image path in data array
+                $dataToUpdate['image'] = $imagePath;
+            }
+
+            // Update the service with new data
+            $service->update($dataToUpdate);
 
             return response()->json(['message' => 'Service updated successfully', 'service' => $service]);
         }
@@ -328,6 +329,7 @@ class AdminController extends Controller
         // If not an admin, return an error response
         return response()->json(['error' => 'Unauthorized'], 403);
     }
+
 
     public function deleteService($serviceId)
     {

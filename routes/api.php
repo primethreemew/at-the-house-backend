@@ -43,14 +43,16 @@ Route::prefix('mobile')->group(function () {
     Route::get('/admin/services/{serviceId}', [AdminController::class, 'viewServiceApp']);
     Route::get('/admin/recommended', [AdminController::class, 'getAllRecommended']);
     Route::get('/admin/relevantsearch/{categoryname}', [AdminController::class, 'getAllRelevantSearch']);
-    Route::get('/agent-services', [ServiceController::class, 'getAllAgentServices']);
+    //Route::get('/agent-services', [ServiceController::class, 'getAllAgentServices']);
+    Route::middleware('auth:sanctum')->get('/agent-services', [ServiceController::class, 'getAgentServicesApp']);
+
     //Route::put('/referral/{serviceId}', [AdminController::class, 'submitReferral']);
     Route::middleware('role:admin|agent')->group(function () {
         // Admin and Agent route to create agent service
         Route::post('/agent-services/create', [ServiceController::class, 'agentServiceCreate']);
 
         // Retrieve all agent's services
-       // Route::get('/agent-services', [ServiceController::class, 'getAllAgentServices']);
+        //Route::get('/agent-services', [ServiceController::class, 'getAllAgentServices']);
 
         // Retrieve a specific agent's service by ID
        // Route::get('/agent-services/{id}', [ServiceController::class, 'getAgentService']);
@@ -99,7 +101,7 @@ Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
 
 
 // Admin-only route to get all services
-Route::get('/admin/services', [AdminController::class, 'getAllServices']);
+Route::get('/admin/servicess', [AdminController::class, 'getAllServices']);
 
 /*
 |--------------------------------------------------------------------------
@@ -155,6 +157,8 @@ Route::middleware('auth:sanctum','verified')->group(function () {
 
     // Routes for both admin and agent
     Route::middleware('role:admin|agent')->group(function () {
+
+        Route::get('/admin/agent-services', [ServiceController::class, 'getAllAgentsServices']);
         // Admin and Agent route to create agent service
         Route::post('/agent-services/create', [ServiceController::class, 'agentServiceCreate']);
 
