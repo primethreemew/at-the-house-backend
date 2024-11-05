@@ -102,7 +102,7 @@ class ServiceController extends Controller
             }
             return response()->json(['success' => true, 'services' => $services]);
         }elseif ($user->hasRole('admin')) {
-            $allowedCategoryTypes = ['normal','popular', 'most_demanding'];
+            $allowedCategoryTypes = ['popular', 'most_demanding'];
             $result = [];
 
             try {
@@ -171,7 +171,7 @@ class ServiceController extends Controller
             }
             return response()->json(['success' => true, 'services' => $services]);
         }elseif ($user->hasRole('admin')) {
-            $allowedCategoryTypes = ['normal','popular', 'most_demanding'];
+            $allowedCategoryTypes = ['popular', 'most_demanding'];
             $result = [];
 
             try {
@@ -209,7 +209,7 @@ class ServiceController extends Controller
     public function getAllAgentsServices()
     {
 
-        $allowedCategoryTypes = ['normal','popular', 'most_demanding'];
+        $allowedCategoryTypes = ['popular', 'most_demanding'];
         $result = [];
 
         try {

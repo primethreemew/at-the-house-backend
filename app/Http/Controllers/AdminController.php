@@ -187,7 +187,7 @@ class AdminController extends Controller
             $service = Service::create([
                 'category_name' => $request->input('category_name'),
                 'image' => $imagePath,
-                'category_type' => $request->input('category_type', 'normal'), // Default to 'normal' if not provided
+                'category_type' => $request->input('category_type', 'category'), // Default to 'category' if not provided
                 // Add other fields as needed
             ]);
 
@@ -201,7 +201,7 @@ class AdminController extends Controller
     public function getAllServices()
     {
 
-        $allowedCategoryTypes = ['normal','popular', 'most_demanding'];
+        $allowedCategoryTypes = ['popular', 'most_demanding'];
         $result = [];
 
         try {
@@ -220,7 +220,7 @@ class AdminController extends Controller
 
     public function getAllServicesApp()
     {
-        $allowedCategoryTypes = ['normal', 'popular', 'most_demanding'];
+        $allowedCategoryTypes = ['popular', 'most_demanding'];
         $result = [];
 
         try {
@@ -254,7 +254,7 @@ class AdminController extends Controller
 
     public function getAllRecommended()
     {
-        $allowedCategoryTypes = ['normal','popular', 'most_demanding'];
+        $allowedCategoryTypes = ['popular', 'most_demanding'];
         $result = [];
 
         try {
