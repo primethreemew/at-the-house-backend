@@ -52,6 +52,23 @@ class AdminController extends Controller
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
+    public function updateAgents($agentId){
+        if (Auth::user()->roles->contains('name', 'admin')) {
+
+            // Find the service by ID
+            $agent = User::find($agentId);
+            if (!$agent) {
+                return response()->json(['error' => 'Agent not found'], 404);
+            }
+
+            // Check if a base64 image string or a file upload is provided
+            return response()->json(['agent' => $agent]);
+        }
+
+        // If not an admin, return an error response
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
     public function registerAgent(RegisterUserRequest $request)
     {
         // Check if the authenticated user is an admin

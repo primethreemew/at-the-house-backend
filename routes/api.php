@@ -134,6 +134,9 @@ Route::middleware('auth:sanctum','verified')->group(function () {
         // View all registered agents
         Route::get('/admin/agents', [AdminController::class, 'viewAgents']);
 
+        // Edit Agents
+        Route::get('/admin/agents/{agentId}', [AdminController::class, 'updateAgents']);
+
         // // Admin-only route to get all services
         Route::get('/admin/services', [AdminController::class, 'getAllServices']);
 
