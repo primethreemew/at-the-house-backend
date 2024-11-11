@@ -176,28 +176,29 @@ class ServiceController extends Controller
 
             try {
                 foreach ($allowedCategoryTypes as $categoryType) {
-                
-                $services = DB::table('agent_services')
-                    ->join('services', 'agent_services.category_id', '=', 'services.id')
-                    ->where('agent_services.service_type', [$categoryType])
-                    ->select('agent_services.*', 'services.category_name', 'services.category_type')
-                    ->get();
+                    $services = DB::table('agent_services')
+                        ->join('services', 'agent_services.category_id', '=', 'services.id')
+                        ->where('agent_services.service_type', $categoryType) // Fixed the where condition
+                        ->select('agent_services.*', 'services.category_name', 'services.category_type', 'services.image')
+                        ->get();
+                        
+                    foreach ($services as $service) {
+                        if ($service->featured_image && !str_starts_with($service->featured_image, 'http')) {
+                            $service->featured_image = url('storage/' . $service->featured_image);
+                        }
+                        if ($service->banner_image && !str_starts_with($service->banner_image, 'http')) {
+                            $service->banner_image = url('storage/' . $service->banner_image);
+                        }
+                        if ($service->image && !str_starts_with($service->image, 'http')) {
+                            $service->image = url('storage/' . $service->image);
+                        }
+                    }
                     $result[$categoryType] = $services;
                 }
-
-                foreach ($services as $service) {
-                    if ($service->featured_image) {
-                        $service->featured_image = url('storage/' . $service->featured_image);
-                    }
-
-                    if ($service->banner_image) {
-                        $service->banner_image = url('storage/' . $service->banner_image);
-                    }
-                }
-
+            
                 // Return all services grouped by category type
                 return response()->json(['success' => true, 'services' => $result]);
-
+            
             } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
             }
@@ -231,21 +232,52 @@ class ServiceController extends Controller
         }
     }
 
+    // public function getAgentServiceApp($id)
+    // {
+    //     $user = Auth::user();
+
+    //     try { 
+    //         $service = AgentService::findOrFail($id);
+
+    //         // // Check user roles if needed, e.g., agents can only access their own services
+    //         // if ($user->hasRole('agent') && $service->user_id != $user->id) {
+    //         //     return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+    //         // }
+
+    //         // Append URL to the featured image if it exists
+    //         if ($service->featured_image) {
+    //             $service->featured_image = url('storage/' . $service->featured_image);
+    //         }
+
+    //         return response()->json(['success' => true, 'service' => $service]);
+    //     } catch (ModelNotFoundException $e) {
+    //         return response()->json(['success' => false, 'error' => 'Service not found'], 404);
+    //     }
+    // }
+
     public function getAgentServiceApp($id)
     {
         $user = Auth::user();
 
         try { 
-            $service = AgentService::findOrFail($id);
+            // Use a join to get additional details from the services table
+            $service = DB::table('agent_services')
+                        ->join('services', 'agent_services.category_id', '=', 'services.id')
+                        ->where('agent_services.id', $id)
+                        ->select('agent_services.*', 'services.category_name', 'services.category_type', 'services.image')
+                        ->first();
 
-            // // Check user roles if needed, e.g., agents can only access their own services
-            // if ($user->hasRole('agent') && $service->user_id != $user->id) {
-            //     return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
-            // }
+            if (!$service) {
+                return response()->json(['success' => false, 'error' => 'Service not found'], 404);
+            }
 
             // Append URL to the featured image if it exists
             if ($service->featured_image) {
                 $service->featured_image = url('storage/' . $service->featured_image);
+            }
+
+            if ($service->image) {
+                $service->image = url('storage/' . $service->image);
             }
 
             return response()->json(['success' => true, 'service' => $service]);
@@ -253,7 +285,6 @@ class ServiceController extends Controller
             return response()->json(['success' => false, 'error' => 'Service not found'], 404);
         }
     }
-
 
     /**
      * Get a specific agent service by ID.

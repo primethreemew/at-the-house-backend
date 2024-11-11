@@ -38,13 +38,14 @@ Route::prefix('mobile')->group(function () {
     Route::post('/logins', [AuthController::class, 'loginApp'])->name('mobile.login');
     Route::post('/verify-otp', [AuthController::class, 'verifyOtpApp']);
     Route::post('/verify-email', [AuthController::class, 'verifyEmailApp']);
-    Route::get('/admin/services', [AdminController::class, 'getAllServicesApp']);
+    //Route::get('/admin/services', [AdminController::class, 'getAllServicesApp']);
     Route::get('/admin/services/{id}', [ServiceController::class, 'getAgentServiceApp']);
     Route::get('/admin/services/{serviceId}', [AdminController::class, 'viewServiceApp']);
     Route::get('/admin/recommended', [AdminController::class, 'getAllRecommended']);
     Route::get('/admin/relevantsearch/{categoryname}', [AdminController::class, 'getAllRelevantSearch']);
     //Route::get('/agent-services', [ServiceController::class, 'getAllAgentServices']);
-    Route::middleware('auth:sanctum')->get('/agent-services', [ServiceController::class, 'getAgentServicesApp']);
+    //Route::middleware('auth:sanctum')->get('/agent-services', [ServiceController::class, 'getAgentServicesApp']);
+    Route::middleware('auth:sanctum')->get('/admin/services', [ServiceController::class, 'getAgentServicesApp']);
 
     //Route::put('/referral/{serviceId}', [AdminController::class, 'submitReferral']);
     Route::middleware('role:admin|agent')->group(function () {
