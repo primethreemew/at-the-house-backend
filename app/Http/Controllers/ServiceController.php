@@ -154,23 +154,23 @@ class ServiceController extends Controller
 
         $user = Auth::user();
         if (!$user) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+            return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
         }
 
-        if ($user->hasRole('agent')) {
-            $services = AgentService::where('user_id', $user->id)->get();
+        // if ($user->hasRole('agent')) {
+        //     $services = AgentService::where('user_id', $user->id)->get();
 
-            foreach ($services as $service) {
-                if ($service->featured_image) {
-                    $service->featured_image = url('storage/' . $service->featured_image);
-                }
+        //     foreach ($services as $service) {
+        //         if ($service->featured_image) {
+        //             $service->featured_image = url('storage/' . $service->featured_image);
+        //         }
 
-                if ($service->banner_image) {
-                    $service->banner_image = url('storage/' . $service->banner_image);
-                }
-            }
-            return response()->json(['success' => true, 'services' => $services]);
-        }elseif ($user->hasRole('admin')) {
+        //         if ($service->banner_image) {
+        //             $service->banner_image = url('storage/' . $service->banner_image);
+        //         }
+        //     }
+        //     return response()->json(['success' => true, 'services' => $services]);
+        // }elseif ($user->hasRole('admin')) {
             $allowedCategoryTypes = ['popular', 'most_demanding'];
             $result = [];
 
@@ -202,9 +202,9 @@ class ServiceController extends Controller
             } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
             }
-        }else{
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        // }else{
+        //     return response()->json(['error' => 'Unauthorized'], 403);
+        // }
     }
 
     public function getAllAgentsServices()
