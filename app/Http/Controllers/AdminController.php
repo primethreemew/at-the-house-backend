@@ -488,6 +488,15 @@ class AdminController extends Controller
                 ->where('referrals.referrer_id', $user->id) // Check if referrer_id matches the user's id
                 ->get();
 
+                foreach ($referrals as $referral) {
+                    if ($referral->featured_image && !str_starts_with($referral->featured_image, 'http')) {
+                        $referral->featured_image = url('storage/' . $referral->featured_image);
+                    }
+                    if ($referral->banner_image && !str_starts_with($referral->banner_image, 'http')) {
+                        $referral->banner_image = url('storage/' . $referral->banner_image);
+                    }
+                }
+
             // Check if no referrals are found
             if ($referrals->isEmpty()) {
                 return response()->json(['message' => 'No referrals found', 'success' => false], 404);
