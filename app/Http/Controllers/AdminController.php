@@ -380,6 +380,11 @@ class AdminController extends Controller
                 return response()->json(['error' => 'Service not found'], 404);
             }
 
+            if ($service->image && !str_starts_with($service->image, 'http')) {
+                $service->image = url('storage/' . $service->image);
+            }
+    
+
             return response()->json(['service' => $service]);
         }
 
