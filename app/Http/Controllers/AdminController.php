@@ -489,7 +489,7 @@ class AdminController extends Controller
                     'agent_services.featured_image as featured_image',
                     'agent_services.banner_image as banner_image',
                 )
-                ->where('referrals.status', 'approved')
+               // ->where('referrals.status', 'approved')
                 ->where('referrals.referrer_id', $user->id) // Check if referrer_id matches the user's id
                 ->get();
 
@@ -550,6 +550,14 @@ class AdminController extends Controller
                 ->where('referrals.agent_service_id', $serviceId)
                 ->first();
 
+            
+            if ($referral->featured_image && !str_starts_with($referral->featured_image, 'http')) {
+                $referral->featured_image = url('storage/' . $referral->featured_image);
+            }
+            if ($referral->banner_image && !str_starts_with($referral->banner_image, 'http')) {
+                $referral->banner_image = url('storage/' . $referral->banner_image);
+            }
+            
             // Check if a referral exists
             if (!$referral) {
                 return response()->json([
