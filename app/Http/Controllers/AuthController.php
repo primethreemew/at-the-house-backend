@@ -360,33 +360,105 @@ class AuthController extends Controller
                 // Generate and attach Sanctum token for admin
                 $token = $user->createToken('admin-token')->plainTextToken;
 
-                // Return JSON response for admin with token
-                return response()->json(['success' => true,'role' => 'admin', 'message' => 'Admin login successful', 'token' => $token]);
+                // Return JSON response for admin with token and user details
+                return response()->json([
+                    'success' => true,
+                    'role' => 'admin',
+                    'message' => 'Admin login successful',
+                    'token' => $token,
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'gender' => $user->gender,
+                        'birthdate' => $user->birthdate,
+                        'address' => $user->address,
+                        'city' => $user->city,
+                        'state' => $user->state,
+                        'zip' => $user->zip,
+                        'profile_photo' => $user->profile_photo,
+                    ]
+                ]);
             } elseif ($user->hasRole('user')) {
                 // Generate and attach Sanctum token for user
                 $token = $user->createToken('user-token')->plainTextToken;
 
-                // Return JSON response for user with token
-                return response()->json(['success' => true,'role' => 'user', 'message' => 'User login successful', 'token' => $token]);
+                // Return JSON response for user with token and user details
+                return response()->json([
+                    'success' => true,
+                    'role' => 'user',
+                    'message' => 'User login successful',
+                    'token' => $token,
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'gender' => $user->gender,
+                        'birthdate' => $user->birthdate,
+                        'address' => $user->address,
+                        'city' => $user->city,
+                        'state' => $user->state,
+                        'zip' => $user->zip,
+                        'profile_photo' => $user->profile_photo,
+                    ]
+                ]);
             } elseif ($user->hasRole('agent')) {
                 // Generate and attach Sanctum token for agent
                 $token = $user->createToken('agent-token')->plainTextToken;
 
-                // Return JSON response for agent with token
-                return response()->json(['success' => true,'role' => 'agent', 'message' => 'Agent login successful', 'token' => $token]);
+                // Return JSON response for agent with token and user details
+                return response()->json([
+                    'success' => true,
+                    'role' => 'agent',
+                    'message' => 'Agent login successful',
+                    'token' => $token,
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'gender' => $user->gender,
+                        'birthdate' => $user->birthdate,
+                        'address' => $user->address,
+                        'city' => $user->city,
+                        'state' => $user->state,
+                        'zip' => $user->zip,
+                        'profile_photo' => $user->profile_photo,
+                    ]
+                ]);
             } else {
                 // Handle other roles as needed
-                // Generate and attach Sanctum token for other roles
                 $token = $user->createToken('other-token')->plainTextToken;
 
-                // Return JSON response for other roles with token
-                return response()->json(['success' => true,'role' => 'other', 'message' => 'Login successful', 'token' => $token]);
+                // Return JSON response for other roles with token and user details
+                return response()->json([
+                    'success' => true,
+                    'role' => 'other',
+                    'message' => 'Login successful',
+                    'token' => $token,
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'gender' => $user->gender,
+                        'birthdate' => $user->birthdate,
+                        'address' => $user->address,
+                        'city' => $user->city,
+                        'state' => $user->state,
+                        'zip' => $user->zip,
+                        'profile_photo' => $user->profile_photo,
+                    ]
+                ]);
             }
         }
 
         // Handle failed login
-        return response()->json(['success' => false,'error' => 'Invalid credentials'], 401);
+        return response()->json(['success' => false, 'error' => 'Invalid credentials'], 401);
     }
+
 
     public function changePassword(Request $request)
     {
