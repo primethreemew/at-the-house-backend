@@ -597,53 +597,66 @@ class AuthController extends Controller
     }
 
     public function updateProfileApp(Request $request, User $user)
-    {
-        try {
-            $user = User::findOrFail($user->id);
+{
+    try {
+        $user = User::findOrFail($user->id);
+        $loggedInUser = $request->user();
 
-            $loggedInUser = $request->user();
+        if ($loggedInUser->hasRole('admin') || $loggedInUser->id === $user->id) {
 
-            if ($loggedInUser->hasRole('admin') || $loggedInUser->id === $user->id) {
- 
-                $rules = [
-                    'name' => 'required|string|max:255',
-                    'phone' => 'required|string|max:255',
-                    'profile_photo_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-                ];
+            // Validation rules
+            $rules = [
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+                'phone' => 'required|string|max:255',
+                'gender' => 'nullable|in:male,female,other',
+                'birthdate' => 'nullable|date|date_format:m/d/Y',
+                'profile_photo_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                'currentpassword' => 'nullable|string|min:8',
+                'newpassword' => 'nullable|string|min:8|same:confirmnewpassword',
+            ];
 
-                if ($loggedInUser->hasRole('admin')) {
-                    $rules['email'] = 'required|string|email|max:255|unique:users,email,' . $user->id;
-                }
+            $request->validate($rules);
 
-                if ($request->filled('password')) {
-                    $rules['password'] = 'required|string|min:8';
-                }
+            // Update the user profile details
+            $updateData = $request->only(['name', 'email', 'phone', 'gender', 'birthdate']);
 
-                $request->validate($rules);
-
-                $user->update($request->except('password'));
-
-                if ($request->filled('password')) {
-                    $user->update(['password' => Hash::make($request->input('password'))]);
-                }
-
-                return response()->json(['success' => true,'message' => 'Profile updated successfully']);
+            // Handle profile photo upload if provided
+            if ($request->hasFile('profile_photo_path')) {
+                $file = $request->file('profile_photo_path');
+                $path = $file->store('profile_photos', 'public'); // Store file in 'profile_photos' directory
+                $updateData['profile_photo_path'] = $path;
             }
-            return response()->json(['success' => false,'message' => 'Unauthorized access'], 403);
-        } catch (ValidationException $validationException) {
-            return response()->json(['success' => false,'message' => $validationException->errors()], 422);
-        } catch (ModelNotFoundException $modelNotFoundException) {
-            return response()->json(['success' => false,'message' => 'User not found'], 404);
-        } catch (QueryException $queryException) {
-            $errorCode = $queryException->errorInfo[1];
-            if ($errorCode == 1062) {
-                return response()->json(['success' => false,'message' => 'Email address already exists. Please choose a different one.'], 422);
+
+            // Check if password update is requested
+            if ($request->filled('newpassword')) {
+                if (!$request->filled('currentpassword') || !Hash::check($request->input('currentpassword'), $user->password)) {
+                    return response()->json(['success' => false, 'message' => 'Current password is incorrect'], 422);
+                }
+                $updateData['password'] = Hash::make($request->input('newpassword'));
             }
-            return response()->json(['success' => false,'message' => $queryException->getMessage()], 500);
-        } catch (\Exception $exception) {
-            return response()->json(['success' => false,'message' => $exception->getMessage()], 500);
+
+            $user->update($updateData);
+
+            return response()->json(['success' => true, 'message' => 'Profile updated successfully']);
         }
+
+        return response()->json(['success' => false, 'message' => 'Unauthorized access'], 403);
+
+    } catch (ValidationException $validationException) {
+        return response()->json(['success' => false, 'message' => $validationException->errors()], 422);
+    } catch (ModelNotFoundException $modelNotFoundException) {
+        return response()->json(['success' => false, 'message' => 'User not found'], 404);
+    } catch (QueryException $queryException) {
+        $errorCode = $queryException->errorInfo[1];
+        if ($errorCode == 1062) {
+            return response()->json(['success' => false, 'message' => 'Email address already exists. Please choose a different one.'], 422);
+        }
+        return response()->json(['success' => false, 'message' => $queryException->getMessage()], 500);
+    } catch (\Exception $exception) {
+        return response()->json(['success' => false, 'message' => $exception->getMessage()], 500);
     }
+}
 
 
     // public function logUserActivity(Request $request, $userId)
