@@ -14,6 +14,7 @@ class AgentService extends Model
         'service_type',
         'service_name',
         'short_description',
+        'address',
         'message_number',   
         'phone_number',
         'featured_image',

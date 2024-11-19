@@ -612,8 +612,8 @@ class AuthController extends Controller
                 'gender' => 'nullable|in:male,female,other',
                 'birthdate' => 'nullable|date|date_format:m/d/Y',
                 'profile_photo_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-                'currentpassword' => 'nullable|string|min:8',
-                'newpassword' => 'nullable|string|min:8|same:confirmnewpassword',
+                // 'currentpassword' => 'nullable|string|min:8',
+                // 'newpassword' => 'nullable|string|min:8|same:confirmnewpassword',
             ];
 
             $request->validate($rules);

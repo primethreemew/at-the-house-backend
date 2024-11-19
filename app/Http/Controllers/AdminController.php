@@ -204,8 +204,8 @@ class AdminController extends Controller
             $service = Service::create([
                 'category_name' => $request->input('category_name'),
                 'image' => $imagePath,
-                'category_type' => $request->input('category_type', 'category'), // Default to 'category' if not provided
-                // Add other fields as needed
+                'category_type' => $request->input('category_type', 'category'), 
+                'recommended' => $request->input('recommended'),
             ]);
 
             return response()->json(['message' => 'Service created successfully', 'service' => $service]);
@@ -218,14 +218,19 @@ class AdminController extends Controller
     public function getAllServices()
     {
 
-        $allowedCategoryTypes = ['popular', 'most_demanding'];
+        $allowedCategoryTypes = ['true', 'false'];
         $result = [];
 
         try {
             foreach ($allowedCategoryTypes as $categoryType) {
-                $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
+                if($categoryType == "false"){
+                    $services = DB::select("SELECT * FROM services");    
+                }else{
+                    $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
+                }
                 $result[$categoryType] = $services;
             }
+          // $services = DB::select("SELECT * FROM services where category_type = '1'");
 
             // Return all services grouped by category type
             return response()->json(['success' => true, 'services' => $result]);
@@ -303,7 +308,7 @@ class AdminController extends Controller
             $request->validate([
                 'category_name' => 'required|unique:services,category_name,' . $serviceId,
                 'category_type' => 'required',
-                'category_image' => 'nullable|string', // base64 image validation
+                'category_image' => 'nullable|string', 
             ]);
 
             // Find the service by ID
@@ -316,6 +321,7 @@ class AdminController extends Controller
             $dataToUpdate = [
                 'category_name' => $request->input('category_name'),
                 'category_type' => $request->input('category_type'),
+                'recommended' => $request->input('recommended'),
             ];
 
             // Check if a base64 image string or a file upload is provided

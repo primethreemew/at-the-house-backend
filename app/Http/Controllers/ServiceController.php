@@ -23,6 +23,7 @@ class ServiceController extends Controller
             'service_type'=> 'required',
             'service_name' => 'required',
             'short_description' => 'required',
+            'address' => 'required',
             'message_number' => 'required',
             'phone_number' => 'required',
             'category_id' => 'required',
@@ -40,6 +41,7 @@ class ServiceController extends Controller
                     'service_type' => $request->input('service_type'),
                     'service_name' => $request->input('service_name'),
                     'short_description' => $request->input('short_description'),
+                    'address' => $request->input('address'),
                     'message_number' => $request->input('message_number'),
                     'phone_number' => $request->input('phone_number'),
                     'category_id' => $request->input('category_id'),
@@ -51,6 +53,7 @@ class ServiceController extends Controller
                     'service_type' => $request->input('service_type'),
                     'service_name' => $request->input('service_name'),
                     'short_description' => $request->input('short_description'),
+                    'address' => $request->input('address'),
                     'message_number' => $request->input('message_number'),
                     'phone_number' => $request->input('phone_number'),
                     'category_id' => $request->input('category_id'),
@@ -298,7 +301,12 @@ class ServiceController extends Controller
 
         try { 
             $service = AgentService::findOrFail($id);
-
+            if ($service->featured_image) {
+                $service->featured_image = url('storage/' . $service->featured_image);
+            }
+            if ($service->banner_image) {
+                $service->banner_image = url('storage/' . $service->banner_image);
+            }
             if ($user->hasRole('agent') && $service->user_id == $user->id) {
                 // Agent can retrieve their own service
             } elseif ($user->hasRole('admin') || $user->hasRole('user')) {
@@ -349,26 +357,41 @@ class ServiceController extends Controller
 
         try {
             $service = AgentService::findOrFail($id);
-
-            // Check if a base64 image string is provided
+        
+            // Process `featuredImage`
             if ($request->has('featuredImage')) {
-                $imageData = $request->input('featuredImage');
-                $imageData = str_replace('data:image/png;base64,', '', $imageData);
-                $imageData = str_replace(' ', '+', $imageData);
-                $imageName = uniqid() . '.png'; // or any other desired format
-                Storage::disk('public')->put('featured_image/' . $imageName, base64_decode($imageData));
-                $service->featured_image = 'featured_image/' . $imageName;
+                $featuredImageData = $request->input('featuredImage');
+                $featuredImageData = str_replace('data:image/png;base64,', '', $featuredImageData);
+                $featuredImageData = str_replace(' ', '+', $featuredImageData);
+                $featuredImageName = uniqid() . '_featured.png'; // Ensure unique naming
+                Storage::disk('public')->put('featured_image/' . $featuredImageName, base64_decode($featuredImageData));
+                $service->featured_image = 'featured_image/' . $featuredImageName;
             }
-
+        
+            // Process `bannerImage`
+            if ($request->has('bannerImage')) {
+                $bannerImageData = $request->input('bannerImage');
+                $bannerImageData = str_replace('data:image/png;base64,', '', $bannerImageData);
+                $bannerImageData = str_replace(' ', '+', $bannerImageData);
+                $bannerImageName = uniqid() . '_banner.png'; // Ensure unique naming
+                Storage::disk('public')->put('banner_image/' . $bannerImageName, base64_decode($bannerImageData));
+                $service->banner_image = 'banner_image/' . $bannerImageName;
+            }
+        
+            // Save updated images to the database
+            $service->save();
+        
+            // Update other fields based on role
             if ($user->hasRole('agent') && $service->user_id == $user->id) {
-                $service->update($request->except('featuredImage')); // Exclude the image from mass assignment
+                $service->update($request->except(['featuredImage', 'bannerImage']));
             } elseif ($user->hasRole('admin')) {
-                $service->update($request->except('featuredImage')); // Exclude the image from mass assignment
+                $service->update($request->except(['featuredImage', 'bannerImage']));
             } else {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
-
+        
             return response()->json(['message' => 'Service updated successfully', 'service' => $service]);
+        
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Service not found'], 404);
         }
