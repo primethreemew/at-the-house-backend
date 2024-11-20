@@ -28,7 +28,7 @@ class ServiceController extends Controller
             'phone_number' => 'required',
             'category_id' => 'required',
             'hours' => 'required', // Add this line for hours validation
-            'featured_image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'featured_image' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
             'banner_image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -63,14 +63,27 @@ class ServiceController extends Controller
             }
 
             if ($request->hasFile('featured_image')) {
-                $featuredImage = $request->file('featured_image')->store('images');
-                $service->update(['featured_image' => $featuredImage]);
+                $featuredImage = $request->file('featured_image');
+                $filePath = $featuredImage->store('featured_image', 'public'); // Stores in storage/app/public/featured_images
+                //return response()->json(['message' => $filePath], 400);
+                $service->featured_image = $filePath;
+            } else {
+                return response()->json(['message' => 'Featured image upload failed'], 400);
             }
 
             if ($request->hasFile('banner_image')) {
-                $bannerImage = $request->file('banner_image')->store('images');
-                $service->update(['banner_image' => $bannerImage]);
+                $banner_image = $request->file('banner_image');
+                $filePaths = $banner_image->store('banner_image', 'public'); // Stores in storage/app/public/featured_images
+                $service->banner_image = $filePaths;
+            } else {
+                return response()->json(['message' => 'Banner image upload failed'], 400);
             }
+
+            // if ($request->hasFile('banner_image')) {
+            //     $bannerImage = $request->file('banner_image');
+            //     $service->update(['banner_image' => $bannerImage]);
+            // }
+            $service->save();
 
             return response()->json(['message' => 'Service created successfully', 'service' => $service], 201);
         } else {

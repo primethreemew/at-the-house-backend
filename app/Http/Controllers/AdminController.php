@@ -222,18 +222,19 @@ class AdminController extends Controller
         $result = [];
 
         try {
-            foreach ($allowedCategoryTypes as $categoryType) {
-                if($categoryType == "false"){
-                    $services = DB::select("SELECT * FROM services");    
-                }else{
-                    $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
-                }
-                $result[$categoryType] = $services;
-            }
+            // foreach ($allowedCategoryTypes as $categoryType) {
+            //     if($categoryType == "false"){
+            //         $services = DB::select("SELECT * FROM services");    
+            //     }else{
+            //         $services = DB::select("SELECT * FROM services");
+            //         //$services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
+            //     }
+            //     $result[$categoryType] = $services;
+            // }
           // $services = DB::select("SELECT * FROM services where category_type = '1'");
-
+          $services = DB::select("SELECT * FROM services");
             // Return all services grouped by category type
-            return response()->json(['success' => true, 'services' => $result]);
+            return response()->json(['success' => true, 'services' => $services]);
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
