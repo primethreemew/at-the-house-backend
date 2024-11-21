@@ -68,6 +68,9 @@ class ServiceController extends Controller
                 //return response()->json(['message' => $filePath], 400);
                 $service->featured_image = $filePath;
             } else {
+                // $featuredImage = "argon-react.png";
+                // $filePath = $featuredImage->store('default_image', 'public'); 
+                // $service->featured_image = $filePath;
                 return response()->json(['message' => 'Featured image upload failed'], 400);
             }
 
@@ -76,6 +79,9 @@ class ServiceController extends Controller
                 $filePaths = $banner_image->store('banner_image', 'public'); // Stores in storage/app/public/featured_images
                 $service->banner_image = $filePaths;
             } else {
+                // $featuredImage = "argon-react.png";
+                // $filePath = $featuredImage->store('default_image', 'public'); 
+                // $service->featured_image = $filePath;
                 return response()->json(['message' => 'Banner image upload failed'], 400);
             }
 
