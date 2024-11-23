@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class ServiceController extends Controller
 {
@@ -27,9 +28,10 @@ class ServiceController extends Controller
             'message_number' => 'required',
             'phone_number' => 'required',
             'category_id' => 'required',
+            'website' => 'required',
             'hours' => 'required', // Add this line for hours validation
-            'featured_image' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
-            'banner_image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            //'featured_image' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
+           // 'banner_image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $user = auth()->user();
@@ -45,6 +47,7 @@ class ServiceController extends Controller
                     'message_number' => $request->input('message_number'),
                     'phone_number' => $request->input('phone_number'),
                     'category_id' => $request->input('category_id'),
+                    'website' => $request->input('website'),
                     'user_id' => $userId,
                     'hours' => $request->input('hours'), // Add this line for hours
                 ]);
@@ -57,6 +60,7 @@ class ServiceController extends Controller
                     'message_number' => $request->input('message_number'),
                     'phone_number' => $request->input('phone_number'),
                     'category_id' => $request->input('category_id'),
+                    'website' => $request->input('website'),
                     'user_id' => $user->id,
                     'hours' => $request->input('hours'), // Add this line for hours
                 ]);
@@ -65,25 +69,45 @@ class ServiceController extends Controller
             if ($request->hasFile('featured_image')) {
                 $featuredImage = $request->file('featured_image');
                 $filePath = $featuredImage->store('featured_image', 'public'); // Stores in storage/app/public/featured_images
-                //return response()->json(['message' => $filePath], 400);
+        
                 $service->featured_image = $filePath;
             } else {
-                // $featuredImage = "argon-react.png";
-                // $filePath = $featuredImage->store('default_image', 'public'); 
-                // $service->featured_image = $filePath;
-                return response()->json(['message' => 'Featured image upload failed'], 400);
+                $defaultImagePath = 'featured_image/default_image.png';
+                $service->featured_image = $defaultImagePath;
+                // Check if the default image exists
+                // if (file_exists($defaultImagePath)) {
+                //     // Get the content of the default image
+                //     // $imageContent = file_get_contents($defaultImagePath);
+
+                //     // // Encode the image content into base64
+                //     // $base64Image = base64_encode($imageContent);
+
+                //     // // Add the appropriate prefix for the MIME type (e.g., PNG image)
+                //     // $base64ImageString = 'data:image/png;base64,' . $base64Image;
+
+                //     // // Store the base64 encoded image as a file in the storage
+                //     // // You can store the base64 image in a decoded format in the storage disk
+                //     // $featuredImageName = 'default_image.png'; // Image name
+                //     // $filePath = Storage::disk('public')->put('featured_image/' . $featuredImageName, base64_decode($base64Image));
+
+                //     // Update the service with the file path
+                //     $service->featured_image = $defaultImagePath;
+                // } else {
+                //     // Handle the case where the default image does not exist
+                //     return response()->json(['message' => 'Default image not found'], 400);
+                // }
             }
 
-            if ($request->hasFile('banner_image')) {
-                $banner_image = $request->file('banner_image');
-                $filePaths = $banner_image->store('banner_image', 'public'); // Stores in storage/app/public/featured_images
-                $service->banner_image = $filePaths;
-            } else {
-                // $featuredImage = "argon-react.png";
-                // $filePath = $featuredImage->store('default_image', 'public'); 
-                // $service->featured_image = $filePath;
-                return response()->json(['message' => 'Banner image upload failed'], 400);
-            }
+            // if ($request->hasFile('banner_image')) {
+            //     $banner_image = $request->file('banner_image');
+            //     $filePaths = $banner_image->store('banner_image', 'public'); // Stores in storage/app/public/featured_images
+            //     $service->banner_image = $filePaths;
+            // } else {
+            //     // $featuredImage = "argon-react.png";
+            //     // $filePath = $featuredImage->store('default_image', 'public'); 
+            //     // $service->featured_image = $filePath;
+            //     return response()->json(['message' => 'Banner image upload failed'], 400);
+            // }
 
             // if ($request->hasFile('banner_image')) {
             //     $bannerImage = $request->file('banner_image');
@@ -376,45 +400,49 @@ class ServiceController extends Controller
 
         try {
             $service = AgentService::findOrFail($id);
-        
-            // Process `featuredImage`
-            if ($request->has('featuredImage')) {
+            
+            // Only update the featured image if a new image is provided
+            if ($request->has('featuredImage') && !empty($request->input('featuredImage'))) {
                 $featuredImageData = $request->input('featuredImage');
-                $featuredImageData = str_replace('data:image/png;base64,', '', $featuredImageData);
-                $featuredImageData = str_replace(' ', '+', $featuredImageData);
-                $featuredImageName = uniqid() . '_featured.png'; // Ensure unique naming
-                Storage::disk('public')->put('featured_image/' . $featuredImageName, base64_decode($featuredImageData));
-                $service->featured_image = 'featured_image/' . $featuredImageName;
+                
+                // Check if it's a base64 string and needs to be updated
+                if (strpos($featuredImageData, 'data:image') === 0) {
+                    \Log::info('File is present.', ['filename' => $featuredImageData]);
+                    $featuredImageData = str_replace('data:image/png;base64,', '', $featuredImageData);
+                    $featuredImageData = str_replace(' ', '+', $featuredImageData);
+                    $featuredImageName = uniqid() . '_featured.png'; // Ensure unique naming
+                    
+                    // Save the image
+                    Storage::disk('public')->put('featured_image/' . $featuredImageName, base64_decode($featuredImageData));
+                    
+                    //$filePath = $featuredImageName->store('featured_image', 'public');
+
+                    // Update the service with the new featured image path
+                    $service->featured_image = 'featured_image/' . $featuredImageName;
+                }
             }
-        
-            // Process `bannerImage`
-            if ($request->has('bannerImage')) {
-                $bannerImageData = $request->input('bannerImage');
-                $bannerImageData = str_replace('data:image/png;base64,', '', $bannerImageData);
-                $bannerImageData = str_replace(' ', '+', $bannerImageData);
-                $bannerImageName = uniqid() . '_banner.png'; // Ensure unique naming
-                Storage::disk('public')->put('banner_image/' . $bannerImageName, base64_decode($bannerImageData));
-                $service->banner_image = 'banner_image/' . $bannerImageName;
-            }
-        
-            // Save updated images to the database
+
+            // Update other fields
+            $service->service_type = $request->input('service_type');
+            $service->service_name = $request->input('service_name');
+            $service->short_description = $request->input('short_description');
+            $service->address = $request->input('address');
+            $service->website = $request->input('website');
+            $service->message_number = $request->input('message_number');
+            $service->phone_number = $request->input('phone_number');
+            $service->category_id = $request->input('category_id');
+            $service->hours = $request->input('hours');
+
+            // Save changes
             $service->save();
-        
-            // Update other fields based on role
-            if ($user->hasRole('agent') && $service->user_id == $user->id) {
-                $service->update($request->except(['featuredImage', 'bannerImage']));
-            } elseif ($user->hasRole('admin')) {
-                $service->update($request->except(['featuredImage', 'bannerImage']));
-            } else {
-                return response()->json(['error' => 'Unauthorized'], 403);
-            }
-        
-            return response()->json(['message' => 'Service updated successfully', 'service' => $service]);
-        
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['error' => 'Service not found'], 404);
+
+            return response()->json(['message' => 'Service updated successfully'], 200);
+        } catch (\Exception $e) {
+            \Log::error('Error updating service:', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Error updating service. Please try again later.'], 500);
         }
     }
+
 
 
     /**
