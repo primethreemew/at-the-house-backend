@@ -18,7 +18,7 @@ class AgentService extends Model
         'message_number',   
         'phone_number',
         'featured_image',
-        'banner_image',
+        'website',
         'category_id',
         'hours',
     ];
