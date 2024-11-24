@@ -218,23 +218,24 @@ class AdminController extends Controller
     public function getAllServices()
     {
 
-        $allowedCategoryTypes = ['true', 'false'];
+        $allowedCategoryTypes = ['true', 'all'];
         $result = [];
 
         try {
-            // foreach ($allowedCategoryTypes as $categoryType) {
-            //     if($categoryType == "false"){
-            //         $services = DB::select("SELECT * FROM services");    
-            //     }else{
-            //         $services = DB::select("SELECT * FROM services");
-            //         //$services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
-            //     }
-            //     $result[$categoryType] = $services;
-            // }
-          // $services = DB::select("SELECT * FROM services where category_type = '1'");
-          $services = DB::select("SELECT * FROM services");
+            foreach ($allowedCategoryTypes as $categoryType) {
+                if($categoryType == "all"){
+                    $services = DB::select("SELECT * FROM services");    
+                }else{
+                   // $services = DB::select("SELECT * FROM services");
+                    $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
+                }
+                $result[$categoryType] = $services;
+            }
+            //$services = DB::select("SELECT * FROM services where category_type = '1'");
+            
+            //$services = DB::select("SELECT * FROM services");
             // Return all services grouped by category type
-            return response()->json(['success' => true, 'services' => $services]);
+            return response()->json(['success' => true, 'services' => $result]);
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
@@ -471,6 +472,16 @@ class AdminController extends Controller
             ->get();
         
         return response()->json(['success' => true, 'services' => $referrals]);
+    }
+
+    public function pendingReferrals()
+    {
+        //$referrals = Referral::all();
+        $referrals = DB::table('referrals')
+            ->where('status', "pending")
+            ->get();
+        
+        return response()->json(['success' => true, 'pendindreferrals' => $referrals]);
     }
 
     public function allReferralsApp()
