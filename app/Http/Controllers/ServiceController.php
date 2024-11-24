@@ -371,28 +371,6 @@ class ServiceController extends Controller
      * @param  Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    // public function updateAgentService($id, Request $request)
-    // {
-    //     $user = Auth::user();
-
-    //     try {
-    //         $service = AgentService::findOrFail($id);
-
-    //         $imagePath = $request->hasFile('featuredImage') ? $request->file('featuredImage')->store('featured_image', 'public') : null;
-
-    //         if ($user->hasRole('agent') && $service->user_id == $user->id) {
-    //             $service->update($request->all());
-    //         } elseif ($user->hasRole('admin')) {
-    //             $service->update($request->all());
-    //         } else {
-    //             return response()->json(['error' => 'Unauthorized'], 403);
-    //         }
-
-    //         return response()->json(['message' => 'Service updated successfully', 'service' => $service]);
-    //     } catch (ModelNotFoundException $e) {
-    //         return response()->json(['error' => 'Service not found'], 404);
-    //     }
-    // }
 
     public function updateAgentService($id, Request $request)
     {
