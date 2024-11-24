@@ -125,6 +125,7 @@ Route::middleware('auth:sanctum','verified')->group(function () {
     // Routes for admin
     Route::middleware('role:admin')->group(function () {
         Route::get('/referrals', [AdminController::class, 'allReferrals']);
+        Route::get('/admin/pending-referrals', [AdminController::class, 'pendingReferrals']);
         Route::put('/referrals/{referralId}', [AdminController::class, 'statusChange']);
         // Register an agent
         Route::post('/admin/register-agent', [AdminController::class, 'registerAgent']);
