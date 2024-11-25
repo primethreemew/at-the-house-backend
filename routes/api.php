@@ -43,21 +43,21 @@ Route::prefix('mobile')->group(function () {
     Route::get('/admin/services/{serviceId}', [AdminController::class, 'viewServiceApp']);
     Route::get('/admin/recommended', [AdminController::class, 'getAllRecommended']);
     Route::get('/admin/relevantsearch/{categoryname}', [AdminController::class, 'getAllRelevantSearch']);
-    //Route::get('/agent-services', [ServiceController::class, 'getAllAgentServices']);
-    //Route::middleware('auth:sanctum')->get('/agent-services', [ServiceController::class, 'getAgentServicesApp']);
     Route::middleware('auth:sanctum')->get('/admin/services', [ServiceController::class, 'getAgentServicesApp']);
+
+    // All Category 
+    Route::middleware('auth:sanctum')->get('/admin/categories/all', [AdminController::class, 'getAllCategory']);
+
+    // Explored category
+    Route::middleware('auth:sanctum')->get('/admin/categories/explored', [AdminController::class, 'getAllExploredCategory']);
+
+    // Catgory by list of services
+    Route::middleware('auth:sanctum')->get('/admin/category/{id}', [AdminController::class, 'getServicesbyCategoryID']);
 
     //Route::put('/referral/{serviceId}', [AdminController::class, 'submitReferral']);
     Route::middleware('role:admin|agent')->group(function () {
         // Admin and Agent route to create agent service
         Route::post('/agent-services/create', [ServiceController::class, 'agentServiceCreate']);
-
-        // Retrieve all agent's services
-        //Route::get('/agent-services', [ServiceController::class, 'getAllAgentServices']);
-
-        // Retrieve a specific agent's service by ID
-       // Route::get('/agent-services/{id}', [ServiceController::class, 'getAgentService']);
-
         // Update a specific agent's service by ID
         Route::put('/agent-services/{id}/update', [ServiceController::class, 'updateAgentService']);
 

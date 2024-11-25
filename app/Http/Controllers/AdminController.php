@@ -242,6 +242,100 @@ class AdminController extends Controller
         }
     }
 
+    public function getAllExploredCategory()
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $services = DB::select("SELECT * FROM services WHERE category_type = ?", ["true"]);
+
+            // Iterate over each service to adjust the image URL
+            foreach ($services as $service) {
+                if ($service->image) {
+                    $service->image = url('storage/' . $service->image);
+                }
+            }
+
+            return response()->json(['success' => true, 'result' => $services]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'An error occurred while retrieving Explored Categories', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getAllCategory()
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $services = DB::select("SELECT * FROM services");
+
+            // Iterate over each service to adjust the image URL
+            foreach ($services as $service) {
+                if ($service->image) {
+                    $service->image = url('storage/' . $service->image);
+                }
+            }
+
+            return response()->json(['success' => true, 'result' => $services]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'An error occurred while retrieving Explored Categories', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getServicesbyCategoryID($id)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'data' => $user, 'error' => 'Unauthorized'], 403);
+        }
+
+        try {
+            // Use a join to get additional details from the services table
+            $services = DB::table('agent_services')
+                        ->join('services', 'agent_services.category_id', '=', 'services.id')
+                        ->where('agent_services.category_id', $id)
+                        ->select('agent_services.*', 'services.category_name')
+                        ->get();
+
+            if ($services->isEmpty()) {
+                return response()->json(['success' => false, 'error' => 'Service not found'], 404);
+            }
+
+            // Iterate over each service to modify the response format
+            foreach ($services as $service) {
+                // Handle the featured image URL
+                if ($service->featured_image) {
+                    $service->featured_image = url('storage/' . $service->featured_image);
+                }
+
+                // Parse and format the hours field
+                if ($service->hours) {
+                    $hoursData = json_decode($service->hours, true);
+
+                    // Assume that the format is consistent with "open" and "close" keys
+                    $service->open_hours = $hoursData['open'] ?? null;
+                    $service->close_hours = $hoursData['close'] ?? null;
+
+                    // Remove the original hours field if you no longer need it
+                    unset($service->hours);
+                }
+            }
+
+            return response()->json(['success' => true, 'result' => $services]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'error' => 'Service not found'], 404);
+        }
+    }
+
     public function getAllServicesApp()
     {
         $allowedCategoryTypes = ['popular', 'most_demanding'];
