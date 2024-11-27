@@ -17,11 +17,19 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained('services')->onDelete('cascade'); // Foreign key with cascade delete
             $table->string('service_name');
             $table->text('short_description');
+            $table->text('address')->nullable();
+            $table->string('city')->nullable();
+            $table->string('state')->nullable();
+            $table->string('zipcode')->nullable();
+            $table->string('website')->nullable();
             $table->string('message_number');
             $table->string('phone_number');
             $table->string('featured_image')->nullable();
             $table->string('banner_image')->nullable();
-            $table->string('hours');
+            $table->text('hours');
+            $table->enum('service_type', ['popular', 'most_demanding', 'normal'])->default('normal');
+            $table->text('latitude')->nullable();
+            $table->text('longitude')->nullable();
             $table->timestamps();
         });
     }

@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('services', function (Blueprint $table) {
+        Schema::create('referrals', function (Blueprint $table) {
             $table->id(); 
-            $table->string('category_name');
-            $table->string('image')->nullable();
-            $table->string('category_type')->nullable(); 
-            $table->string('recommended')->nullable(); 
-            $table->timestamps();
+            $table->unsignedBigInteger('referrer_id'); 
+            $table->unsignedBigInteger('agent_service_id'); 
+            $table->enum('status', ['pending', 'approved', 'denied'])->default('pending'); 
+            $table->timestamps(); 
         });
+
     }
 
     /**
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('services');
+        Schema::dropIfExists('referrals');
     }
 };
