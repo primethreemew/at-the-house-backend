@@ -24,6 +24,8 @@ class AgentService extends Model
         'website',
         'category_id',
         'hours',
+        'latitude',
+        'longitude'
     ];
 
     public function user()

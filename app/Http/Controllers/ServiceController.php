@@ -50,6 +50,8 @@ class ServiceController extends Controller
                     'city' => $request->input('city'),
                     'state' => $request->input('state'),
                     'zipcode' => $request->input('zipcode'),
+                    'latitude' => $request->input('latitude'),
+                    'longitude' => $request->input('longitude'),
                     'message_number' => $request->input('message_number'),
                     'phone_number' => $request->input('phone_number'),
                     'category_id' => $request->input('category_id'),
@@ -66,6 +68,8 @@ class ServiceController extends Controller
                     'city' => $request->input('city'),
                     'state' => $request->input('state'),
                     'zipcode' => $request->input('zipcode'),
+                    'latitude' => $request->input('latitude'),
+                    'longitude' => $request->input('longitude'),
                     'message_number' => $request->input('message_number'),
                     'phone_number' => $request->input('phone_number'),
                     'category_id' => $request->input('category_id'),
@@ -366,6 +370,8 @@ class ServiceController extends Controller
             $service->city = $request->input('city');
             $service->state = $request->input('state');
             $service->zipcode = $request->input('zipcode');
+            $service->latitude = $request->input('latitude');
+            $service->longitude = $request->input('longitude');
             $service->website = $request->input('website');
             $service->message_number = $request->input('message_number');
             $service->phone_number = $request->input('phone_number');
