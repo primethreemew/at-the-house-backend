@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Stevebauman\Location\Facades\Location;
 
 class ServiceController extends Controller
 {
@@ -179,37 +180,46 @@ class ServiceController extends Controller
             return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
         }
 
-            $allowedCategoryTypes = ['popular', 'most_demanding'];
-            $result = [];
+        $coordinates = $this->getClientCoordinates();
+        $clientLatitude = $coordinates->original['latitude'];
+        $clientLongitude = $coordinates->original['longitude'];
 
-            try {
-                foreach ($allowedCategoryTypes as $categoryType) {
-                    $services = DB::table('agent_services')
-                        ->join('services', 'agent_services.category_id', '=', 'services.id')
-                        ->where('agent_services.service_type', $categoryType) // Fixed the where condition
-                        ->select('agent_services.*', 'services.category_name', 'services.category_type', 'services.image')
-                        ->get();
-                        
-                    foreach ($services as $service) {
-                        if ($service->featured_image && !str_starts_with($service->featured_image, 'http')) {
-                            $service->featured_image = url('storage/' . $service->featured_image);
-                        }
-                        if ($service->banner_image && !str_starts_with($service->banner_image, 'http')) {
-                            $service->banner_image = url('storage/' . $service->banner_image);
-                        }
-                        if ($service->image && !str_starts_with($service->image, 'http')) {
-                            $service->image = url('storage/' . $service->image);
-                        }
+        $allowedCategoryTypes = ['popular', 'most_demanding'];
+        $result = [];
+
+        try {
+            foreach ($allowedCategoryTypes as $categoryType) {
+                $services = DB::table('agent_services')
+                    ->join('services', 'agent_services.category_id', '=', 'services.id')
+                    ->where('agent_services.service_type', $categoryType)
+                    ->select('agent_services.*', 'services.category_name', 'services.category_type', 'services.image')
+                    ->get();
+                    
+                foreach ($services as $service) {
+                    if ($service->featured_image && !str_starts_with($service->featured_image, 'http')) {
+                        $service->featured_image = url('storage/' . $service->featured_image);
                     }
-                    $result[$categoryType] = $services;
+                    if ($service->banner_image && !str_starts_with($service->banner_image, 'http')) {
+                        $service->banner_image = url('storage/' . $service->banner_image);
+                    }
+                    if ($service->image && !str_starts_with($service->image, 'http')) {
+                        $service->image = url('storage/' . $service->image);
+                    }
+
+                    $serviceLatitude = $service->latitude;
+                    $serviceLongitude = $service->longitude;
+                    $distance = $this->getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
+                    $service->distance = $distance;
                 }
-            
-                // Return all services grouped by category type
-                return response()->json(['success' => true, 'services' => $result]);
-            
-            } catch (\Exception $e) {
-                return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
+                $result[$categoryType] = $services;
             }
+        
+            // Return all services grouped by category type
+            return response()->json(['success' => true, 'services' => $result]);
+        
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
+        }
         // }else{
         //     return response()->json(['error' => 'Unauthorized'], 403);
         // }
@@ -415,5 +425,34 @@ class ServiceController extends Controller
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Service not found'], 404);
         }
+    }
+
+    private function getClientCoordinates()
+    {
+        $ip = request()->ip();
+        $location = Location::get($ip);
+        $latitude = $location->latitude;
+        $longitude = $location->longitude;
+        
+        return response()->json(['latitude' => $latitude, 'longitude' => $longitude]);
+    }
+
+    private function getDistance($latitude1, $longitude1, $latitude2, $longitude2)
+    {
+        $lat1 = deg2rad($latitude1);
+        $lon1 = deg2rad($longitude1);
+        $lat2 = deg2rad($latitude2);
+        $lon2 = deg2rad($longitude2);
+
+        $dlat = $lat2 - $lat1;
+        $dlon = $lon2 - $lon1;
+        $a = sin($dlat/2) * sin($dlat/2) + cos($lat1) * cos($lat2) * sin($dlon/2) * sin($dlon/2);
+        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+        
+        $r = 3959;
+        
+        $distance = $r * $c;
+        
+        return round($distance, 2);
     }
 }
