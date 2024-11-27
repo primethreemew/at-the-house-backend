@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('agent_services', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Foreign key with cascade delete
-            $table->foreignId('category_id')->constrained('services')->onDelete('cascade'); // Foreign key with cascade delete
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('category_id')->constrained('services')->onDelete('cascade');
             $table->string('service_name');
             $table->text('short_description');
             $table->text('address')->nullable();
