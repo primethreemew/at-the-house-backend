@@ -25,6 +25,9 @@ class ServiceController extends Controller
             'service_name' => 'required',
             'short_description' => 'required',
             'address' => 'required',
+            'city' => 'required',
+            'state' => 'required',
+            'zipcode' => 'required',
             'message_number' => 'required',
             'phone_number' => 'required',
             'category_id' => 'required',
@@ -44,6 +47,11 @@ class ServiceController extends Controller
                     'service_name' => $request->input('service_name'),
                     'short_description' => $request->input('short_description'),
                     'address' => $request->input('address'),
+                    'city' => $request->input('city'),
+                    'state' => $request->input('state'),
+                    'zipcode' => $request->input('zipcode'),
+                    'latitude' => $request->input('latitude'),
+                    'longitude' => $request->input('longitude'),
                     'message_number' => $request->input('message_number'),
                     'phone_number' => $request->input('phone_number'),
                     'category_id' => $request->input('category_id'),
@@ -57,6 +65,11 @@ class ServiceController extends Controller
                     'service_name' => $request->input('service_name'),
                     'short_description' => $request->input('short_description'),
                     'address' => $request->input('address'),
+                    'city' => $request->input('city'),
+                    'state' => $request->input('state'),
+                    'zipcode' => $request->input('zipcode'),
+                    'latitude' => $request->input('latitude'),
+                    'longitude' => $request->input('longitude'),
                     'message_number' => $request->input('message_number'),
                     'phone_number' => $request->input('phone_number'),
                     'category_id' => $request->input('category_id'),
@@ -74,45 +87,8 @@ class ServiceController extends Controller
             } else {
                 $defaultImagePath = 'featured_image/default_image.png';
                 $service->featured_image = $defaultImagePath;
-                // Check if the default image exists
-                // if (file_exists($defaultImagePath)) {
-                //     // Get the content of the default image
-                //     // $imageContent = file_get_contents($defaultImagePath);
-
-                //     // // Encode the image content into base64
-                //     // $base64Image = base64_encode($imageContent);
-
-                //     // // Add the appropriate prefix for the MIME type (e.g., PNG image)
-                //     // $base64ImageString = 'data:image/png;base64,' . $base64Image;
-
-                //     // // Store the base64 encoded image as a file in the storage
-                //     // // You can store the base64 image in a decoded format in the storage disk
-                //     // $featuredImageName = 'default_image.png'; // Image name
-                //     // $filePath = Storage::disk('public')->put('featured_image/' . $featuredImageName, base64_decode($base64Image));
-
-                //     // Update the service with the file path
-                //     $service->featured_image = $defaultImagePath;
-                // } else {
-                //     // Handle the case where the default image does not exist
-                //     return response()->json(['message' => 'Default image not found'], 400);
-                // }
             }
 
-            // if ($request->hasFile('banner_image')) {
-            //     $banner_image = $request->file('banner_image');
-            //     $filePaths = $banner_image->store('banner_image', 'public'); // Stores in storage/app/public/featured_images
-            //     $service->banner_image = $filePaths;
-            // } else {
-            //     // $featuredImage = "argon-react.png";
-            //     // $filePath = $featuredImage->store('default_image', 'public'); 
-            //     // $service->featured_image = $filePath;
-            //     return response()->json(['message' => 'Banner image upload failed'], 400);
-            // }
-
-            // if ($request->hasFile('banner_image')) {
-            //     $bannerImage = $request->file('banner_image');
-            //     $service->update(['banner_image' => $bannerImage]);
-            // }
             $service->save();
 
             return response()->json(['message' => 'Service created successfully', 'service' => $service], 201);
@@ -203,20 +179,6 @@ class ServiceController extends Controller
             return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
         }
 
-        // if ($user->hasRole('agent')) {
-        //     $services = AgentService::where('user_id', $user->id)->get();
-
-        //     foreach ($services as $service) {
-        //         if ($service->featured_image) {
-        //             $service->featured_image = url('storage/' . $service->featured_image);
-        //         }
-
-        //         if ($service->banner_image) {
-        //             $service->banner_image = url('storage/' . $service->banner_image);
-        //         }
-        //     }
-        //     return response()->json(['success' => true, 'services' => $services]);
-        // }elseif ($user->hasRole('admin')) {
             $allowedCategoryTypes = ['popular', 'most_demanding'];
             $result = [];
 
@@ -405,6 +367,11 @@ class ServiceController extends Controller
             $service->service_name = $request->input('service_name');
             $service->short_description = $request->input('short_description');
             $service->address = $request->input('address');
+            $service->city = $request->input('city');
+            $service->state = $request->input('state');
+            $service->zipcode = $request->input('zipcode');
+            $service->latitude = $request->input('latitude');
+            $service->longitude = $request->input('longitude');
             $service->website = $request->input('website');
             $service->message_number = $request->input('message_number');
             $service->phone_number = $request->input('phone_number');

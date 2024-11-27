@@ -15,12 +15,17 @@ class AgentService extends Model
         'service_name',
         'short_description',
         'address',
+        'city',
+        'state',
+        'zipcode',
         'message_number',   
         'phone_number',
         'featured_image',
         'website',
         'category_id',
         'hours',
+        'latitude',
+        'longitude'
     ];
 
     public function user()
