@@ -38,8 +38,8 @@ Route::prefix('mobile')->group(function () {
     Route::post('/logins', [AuthController::class, 'loginApp'])->name('mobile.login');
     Route::post('/verify-otp', [AuthController::class, 'verifyOtpApp']);
     Route::post('/verify-email', [AuthController::class, 'verifyEmailApp']);
-    //Route::get('/admin/services', [AdminController::class, 'getAllServicesApp']);
-    Route::get('/admin/services/{id}', [ServiceController::class, 'getAgentServiceApp']);
+    
+    //Route::get('/admin/services/{id}', [ServiceController::class, 'getAgentServiceApp']);
     Route::get('/admin/services/{serviceId}', [AdminController::class, 'viewServiceApp']);
     Route::get('/admin/recommended', [AdminController::class, 'getAllRecommended']);
     Route::get('/admin/relevantsearch/{categoryname}', [AdminController::class, 'getAllRelevantSearch']);
@@ -54,8 +54,21 @@ Route::prefix('mobile')->group(function () {
     // Catgory by list of services
     Route::middleware('auth:sanctum')->get('/admin/category/{id}', [AdminController::class, 'getServicesbyCategoryID']);
 
+    // Retrive All Agents Services
+    Route::middleware('auth:sanctum')->get('/agent-services', [ServiceController::class, 'getAllAgentServicesApp']);
+    
+    //Popular services
+    Route::middleware('auth:sanctum')->get('/services/popular', [ServiceController::class, 'getAllPopularServices']);
+    
+    //Single service By id
+    Route::middleware('auth:sanctum')->get('/services/{id}', [ServiceController::class, 'getAgentServiceApp']);
+    //Route::middleware('auth:sanctum')->get('/admin/services', [ServiceController::class, 'getSingleServiceApp']);
+
     //Route::put('/referral/{serviceId}', [AdminController::class, 'submitReferral']);
     Route::middleware('role:admin|agent')->group(function () {
+        
+        
+
         // Admin and Agent route to create agent service
         Route::post('/agent-services/create', [ServiceController::class, 'agentServiceCreate']);
         // Update a specific agent's service by ID
