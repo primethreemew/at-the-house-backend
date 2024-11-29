@@ -160,6 +160,123 @@ class ServiceController extends Controller
         }
     }
 
+    public function getAllAgentServicesApp()
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        try {
+                $allowedCategoryTypes = ['popular', 'most_demanding'];
+                $result = [];
+
+                foreach ($allowedCategoryTypes as $categoryType) {
+                    $services = DB::table('agent_services')
+                        ->join('services', 'agent_services.category_id', '=', 'services.id')
+                        ->where('agent_services.service_type', $categoryType)
+                        ->select('agent_services.*', 'services.category_name', 'services.category_type')
+                        ->get();
+
+                    foreach ($services as $service) {
+                        $service->featured_image = $service->featured_image
+                            ? url('storage/' . $service->featured_image)
+                            : null;
+
+                        $service->formatted_hours = $this->formatHours($service->hours);
+                        unset($service->hours);
+                    }
+
+                    $result[$categoryType] = $services;
+                }
+
+                return response()->json(['success' => true, 'services' => $result]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while retrieving services',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function getAllPopularServices()
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        try {
+                $allowedCategoryTypes = ['popular'];
+                $result = [];
+
+                foreach ($allowedCategoryTypes as $categoryType) {
+                    $services = DB::table('agent_services')
+                        ->join('services', 'agent_services.category_id', '=', 'services.id')
+                        ->where('agent_services.service_type', $categoryType)
+                        ->select('agent_services.*', 'services.category_name', 'services.category_type')
+                        ->get();
+
+                    foreach ($services as $service) {
+                        $service->featured_image = $service->featured_image
+                            ? url('storage/' . $service->featured_image)
+                            : null;
+
+                        $service->formatted_hours = $this->formatHours($service->hours);
+                        unset($service->hours);
+                    }
+
+                    $result[$categoryType] = $services;
+                }
+
+                return response()->json(['success' => true, 'services' => $result]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while retrieving services',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Format hours JSON into readable format.
+     *
+     * @param string|null $hours
+     * @return array|null
+     */
+    private function formatHours($hours)
+    {
+        if (!$hours) {
+            return null;
+        }
+
+        $hoursData = json_decode($hours, true);
+        $formattedHours = [];
+
+        foreach ($hoursData as $dayHours) {
+            $open = $dayHours['open'] ?? null;
+            $close = $dayHours['close'] ?? null;
+
+            if (empty($open) && empty($close)) {
+                $formattedHours[$dayHours['day']] = ['Closed'];
+            } else {
+                $formattedHours[$dayHours['day']] = [
+                    'open' => $open ? date("h:i A", strtotime($open)) : '--',
+                    'close' => $close ? date("h:i A", strtotime($close)) : '--',
+                ];
+            }
+        }
+
+        return $formattedHours;
+    }
+
     public function getAgentServicesApp()
     {
         // $user = Auth::user();
@@ -276,33 +393,74 @@ class ServiceController extends Controller
     public function getAgentServiceApp($id)
     {
         $user = Auth::user();
-
-        try { 
-            // Use a join to get additional details from the services table
+    
+        if (!$user) {
+            return response()->json(['success' => false, 'data' => $user, 'error' => 'Unauthorized'], 403);
+        }
+    
+        try {
+            // Use first() instead of get() to fetch a single record
             $service = DB::table('agent_services')
-                        ->join('services', 'agent_services.category_id', '=', 'services.id')
-                        ->where('agent_services.id', $id)
-                        ->select('agent_services.*', 'services.category_name', 'services.category_type', 'services.image')
+                        ->where('id', $id)
                         ->first();
-
+    
             if (!$service) {
                 return response()->json(['success' => false, 'error' => 'Service not found'], 404);
             }
-
-            // Append URL to the featured image if it exists
+    
+            // Append the full URL for the featured_image if it exists
             if ($service->featured_image) {
                 $service->featured_image = url('storage/' . $service->featured_image);
             }
-
-            if ($service->image) {
-                $service->image = url('storage/' . $service->image);
+    
+            // Optionally process the hours field
+            if ($service->hours) {
+                $service->formatted_hours = $this->formatHours($service->hours);
+                unset($service->hours); // Remove the original hours field if not needed
             }
-
-            return response()->json(['success' => true, 'service' => $service]);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['success' => false, 'error' => 'Service not found'], 404);
+    
+            return response()->json(['success' => true, 'result' => $service]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
+    
+
+    // public function getAgentServiceApp($id)
+    // {
+    //     $user = Auth::user();
+
+    //     if (!$user) {
+    //         return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+    //     }
+
+    //     try { 
+    //         // Use a join to get additional details from the services table
+    //         $service = DB::table('agent_services')
+    //                     ->where('id', $id)
+    //                     ->get();
+
+    //         if (!$service) {
+    //             return response()->json(['success' => false, 'error' => 'Service not found'], 404);
+    //         }
+
+    //         // Append URL to the featured image if it exists
+    //         if ($service->featured_image) {
+    //             $service->featured_image = url('storage/' . $service->featured_image);
+    //         }
+
+    //         $service->formatted_hours = $this->formatHours($service->hours);
+    //                     unset($service->hours);
+
+    //         if ($service->image) {
+    //             $service->image = url('storage/' . $service->image);
+    //         }
+
+    //         return response()->json(['success' => true, 'service' => $service]);
+    //     } catch (ModelNotFoundException $e) {
+    //         return response()->json(['success' => false, 'error' => 'Service not found'], 404);
+    //     }
+    // }
 
     /**
      * Get a specific agent service by ID.
