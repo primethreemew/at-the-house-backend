@@ -18,7 +18,6 @@ class AgentServiceSeeder extends Seeder
         
         $serviceTypes = ['popular', 'most_demanding', 'normal'];
 
-        // Maryland cities with their approximate lat/long ranges
         $mdCities = [
             'Baltimore' => ['zip' => ['21201', '21202', '21203', '21204', '21205'], 'lat' => [39.2800, 39.3100], 'lng' => [-76.6300, -76.5900]],
             'Annapolis' => ['zip' => ['21401', '21402', '21403', '21404'], 'lat' => [38.9700, 39.0000], 'lng' => [-76.5200, -76.4900]],
@@ -40,11 +39,11 @@ class AgentServiceSeeder extends Seeder
                 'short_description' => 'Short description ' . $i,
                 'address' => rand(100, 9999) . ' ' . $streets[array_rand($streets)],
                 'city' => $city,
-                'state' => 'MD',
+                'state' => 'Maryland',
                 'zipcode' => $cityData['zip'][array_rand($cityData['zip'])],
                 'message_number' => '410-555-0100',
                 'phone_number' => '410-555-0101',
-                'hours' => 'Mon-Fri: 9am-5pm, Sat: 10am-3pm, Sun: Closed',
+                'hours' => '{"open":"01:00","close":"02:01"}',
                 'service_type' => $serviceTypes[array_rand($serviceTypes)],
                 'latitude' => number_format(rand($cityData['lat'][0] * 10000, $cityData['lat'][1] * 10000) / 10000, 4),
                 'longitude' => number_format(rand($cityData['lng'][0] * 10000, $cityData['lng'][1] * 10000) / 10000, 4),

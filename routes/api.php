@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AgentServiceController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\MapController;
 use App\Http\Controllers\ServiceController;
 use App\Models\User;
 /*
@@ -77,6 +78,10 @@ Route::prefix('mobile')->group(function () {
         // Delete a specific agent's service by ID
         Route::delete('/agent-services/{id}/delete', [ServiceController::class, 'deleteAgentService']);
     });
+
+    // Get zip code from address using Google Maps API
+    Route::get('/get-zipcode', [MapController::class, 'getZipCodeFromAddress']);
+    Route::get('/get-coordinates', [MapController::class, 'getCoordinatesFromZipCode']);
 });
 
 
