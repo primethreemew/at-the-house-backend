@@ -16,11 +16,11 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::create([
-            'name' => 'Mana Fujita',
-            'email' => 'mana.fujita.tech@gmail.com',
+            'name' => 'Admin',
+            'email' => 'admin@gmail.com',
             'phone' => '+818012345678',
             'is_email_exist' => true,
-            'gender' => 'female',
+            'gender' => 'male',
             'birthdate' => '1990-01-01',
             'otp' => '123456',
             'email_verified_at' => now(),
@@ -40,7 +40,57 @@ class UserSeeder extends Seeder
             'account_type' => 'register',
         ]);
 
-        for ($i = 0; $i < 10; $i++) {
+        User::create([
+            'name' => 'Agent',
+            'email' => 'agent@gmail.com',
+            'phone' => '+818012345678',
+            'is_email_exist' => true,
+            'gender' => 'male',
+            'birthdate' => '1990-01-01',
+            'otp' => '123456',
+            'email_verified_at' => now(),
+            'iso_code' => 'JP',
+            'country_code' => '+81',
+            'address' => '123 Main St',
+            'suite_number' => 'Apt 1',
+            'city' => 'Tokyo',
+            'state' => 'Tokyo',
+            'zip' => '10001',
+            'password' => Hash::make('password'),
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'remember_token' => Str::random(10),
+            'current_team_id' => null,
+            'profile_photo' => null,
+            'account_type' => 'register',
+        ]);
+
+        User::create([
+            'name' => 'User',
+            'email' => 'user@gmail.com',
+            'phone' => '+818012345678',
+            'is_email_exist' => true,
+            'gender' => 'male',
+            'birthdate' => '1990-01-01',
+            'otp' => '123456',
+            'email_verified_at' => now(),
+            'iso_code' => 'JP',
+            'country_code' => '+81',
+            'address' => '123 Main St',
+            'suite_number' => 'Apt 1',
+            'city' => 'Tokyo',
+            'state' => 'Tokyo',
+            'zip' => '10001',
+            'password' => Hash::make('password'),
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'remember_token' => Str::random(10),
+            'current_team_id' => null,
+            'profile_photo' => null,
+            'account_type' => 'register',
+        ]);
+
+        for ($i = 0; $i < 7; $i++) {
             User::create([
                 'name' => fake()->name(),
                 'email' => fake()->unique()->email(),

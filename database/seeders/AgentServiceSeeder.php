@@ -28,7 +28,7 @@ class AgentServiceSeeder extends Seeder
 
         $streets = ['Main Street', 'Oak Avenue', 'Maple Drive', 'Cedar Lane', 'Pine Road', 'Washington Street', 'Park Avenue'];
 
-        for( $i = 0; $i < 10; $i++ ) {
+        for( $i = 0; $i < 5; $i++ ) {
             $city = array_rand($mdCities);
             $cityData = $mdCities[$city];
             
@@ -39,11 +39,14 @@ class AgentServiceSeeder extends Seeder
                 'short_description' => 'Short description ' . $i,
                 'address' => rand(100, 9999) . ' ' . $streets[array_rand($streets)],
                 'city' => $city,
-                'state' => 'Maryland',
+                'state' => 'MD',
                 'zipcode' => $cityData['zip'][array_rand($cityData['zip'])],
+                'website' => 'https://www.example.com',
                 'message_number' => '410-555-0100',
                 'phone_number' => '410-555-0101',
-                'hours' => '{"open":"01:00","close":"02:01"}',
+                'featured_image' => 'featured_image' . $i . '.jpg',
+                'banner_image' => 'banner_image' . $i . '.jpg',
+                'hours' => '[{"day":"Monday","open":"","close":""},{"day":"Tuesday","open":"","close":""},{"day":"Wednesday","open":"","close":""},{"day":"Thursday","open":"","close":""},{"day":"Friday","open":"","close":""},{"day":"Saturday","open":"","close":""},{"day":"Sunday","open":"","close":""}]',
                 'service_type' => $serviceTypes[array_rand($serviceTypes)],
                 'latitude' => number_format(rand($cityData['lat'][0] * 10000, $cityData['lat'][1] * 10000) / 10000, 4),
                 'longitude' => number_format(rand($cityData['lng'][0] * 10000, $cityData['lng'][1] * 10000) / 10000, 4),
