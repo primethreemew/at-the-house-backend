@@ -345,18 +345,21 @@ class ServiceController extends Controller
     public function getAllAgentsServices()
     {
 
-        $allowedCategoryTypes = ['popular', 'most_demanding'];
+        $allowedCategoryTypes = ['popular', 'all'];
         $result = [];
 
         try {
             foreach ($allowedCategoryTypes as $categoryType) {
-               // $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
-               $services = DB::table('agent_services')
-                ->join('services', 'agent_services.category_id', '=', 'services.id')
-                ->join('users', 'agent_services.user_id', '=', 'users.id')
-                ->where('agent_services.service_type', [$categoryType])
-                ->select('agent_services.*', 'services.category_name', 'services.category_type', 'users.email')
-                ->get();
+                if($categoryType == "all"){
+                    $services = DB::select("SELECT * FROM agent_services");  
+                }else{
+                // $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
+                    $services = DB::table('agent_services')
+                    ->join('services', 'agent_services.category_id', '=', 'services.id')
+                    ->where('agent_services.service_type', [$categoryType])
+                    ->select('agent_services.*', 'services.category_name', 'services.category_type')
+                    ->get();
+                }
                 $result[$categoryType] = $services;
             }
 
@@ -542,7 +545,7 @@ class ServiceController extends Controller
             $service->latitude = $request->input('latitude');
             $service->longitude = $request->input('longitude');
             $service->website = $request->input('website');
-            $service->message_number = $request->input('message_number');
+            $service->email = $request->input('email');
             $service->phone_number = $request->input('phone_number');
             $service->category_id = $request->input('category_id');
             $service->hours = $request->input('hours');
