@@ -353,8 +353,9 @@ class ServiceController extends Controller
                // $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
                $services = DB::table('agent_services')
                 ->join('services', 'agent_services.category_id', '=', 'services.id')
+                ->join('users', 'agent_services.user_id', '=', 'users.id')
                 ->where('agent_services.service_type', [$categoryType])
-                ->select('agent_services.*', 'services.category_name', 'services.category_type')
+                ->select('agent_services.*', 'services.category_name', 'services.category_type', 'users.email')
                 ->get();
                 $result[$categoryType] = $services;
             }
