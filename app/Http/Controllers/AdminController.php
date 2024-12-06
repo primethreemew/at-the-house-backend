@@ -562,8 +562,14 @@ class AdminController extends Controller
         //$referrals = Referral::all();
         $referrals = DB::table('referrals')
             ->join('agent_services', 'referrals.agent_service_id', '=', 'agent_services.id')
-            ->select('referrals.*', 'agent_services.service_name as service_name', 'agent_services.short_description as short_description', 'agent_services.message_number as message_number', 'agent_services.phone_number as phone_number')
-            ->get();
+            ->join('users', 'referrals.referrer_id', '=', 'users.id')
+            ->select(
+                'referrals.*',
+                'users.name as name',
+                'users.email as email',
+                'agent_services.service_name as service_name',
+                'agent_services.phone_number as phone_number',
+            )->get();
         
         return response()->json(['success' => true, 'services' => $referrals]);
     }
