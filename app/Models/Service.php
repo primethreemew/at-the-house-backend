@@ -10,7 +10,7 @@ class Service extends Model
     use HasFactory;
 
     protected $fillable = [
-         'category_name', 'image', 'category_type', 'recommended'
+        'category_name', 'image', 'category_type', 'recommended'
     ];
 
     public static $rules = [

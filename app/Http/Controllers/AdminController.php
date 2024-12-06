@@ -218,16 +218,18 @@ class AdminController extends Controller
     public function getAllServices()
     {
 
-        $allowedCategoryTypes = ['true', 'all'];
+        $allowedCategoryTypes = ['true', 'isRecommended' , 'all'];
         $result = [];
 
         try {
             foreach ($allowedCategoryTypes as $categoryType) {
                 if($categoryType == "all"){
                     $services = DB::select("SELECT * FROM services");    
-                }else{
+                }elseif($categoryType == "true"){
                    // $services = DB::select("SELECT * FROM services");
                     $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
+                }else{
+                    $services = DB::select("SELECT * FROM services WHERE recommended = ?", [$categoryType]);
                 }
                 $result[$categoryType] = $services;
             }
@@ -396,16 +398,16 @@ class AdminController extends Controller
 
     public function getAllRelevantSearch($categoryname){
         $relevantCatId = DB::table('services')
-                          ->where('category_name', $categoryname)
-                          ->value('id');
+                        ->where('category_name', $categoryname)
+                        ->value('id');
 
         $relevantServices = DB::table('agent_services')
-                          ->where('category_id', $relevantCatId)->get();
-                          
+                        ->where('category_id', $relevantCatId)->get();
+                        
         return response()->json(['success' => true, 'services' => $relevantServices]);
     }
 
-    public function updateService(Request $request, $serviceId)
+    public function updateService(Request $request, $serviceId) 
     {
         
         // Check if the authenticated user is an admin
@@ -413,7 +415,8 @@ class AdminController extends Controller
             // Validate the request data
             $request->validate([
                 'category_name' => 'required|unique:services,category_name,' . $serviceId,
-                'category_type' => 'required',
+                'category_type' => 'required|string',
+                'recommended' => 'required|in:notRecommended,isRecommended', // Ensure valid value for 'recommended'
                 'category_image' => 'nullable|string', 
             ]);
 
@@ -429,7 +432,7 @@ class AdminController extends Controller
                 'category_type' => $request->input('category_type'),
                 'recommended' => $request->input('recommended'),
             ];
-
+            
             // Check if a base64 image string or a file upload is provided
             if ($request->has('category_image')) {
                 $base64Image = $request->input('category_image');
@@ -446,9 +449,10 @@ class AdminController extends Controller
                 \Storage::disk('public')->put($imagePath, $imageData);
 
                 // Update image path in data array
-                $dataToUpdate['image'] = $imagePath;
+                $dataToUpdate['category_image'] = $imagePath;
             }
 
+            
             // Update the service with new data
             $service->update($dataToUpdate);
 
@@ -458,7 +462,6 @@ class AdminController extends Controller
         // If not an admin, return an error response
         return response()->json(['error' => 'Unauthorized'], 403);
     }
-
 
     public function deleteService($serviceId)
     {
