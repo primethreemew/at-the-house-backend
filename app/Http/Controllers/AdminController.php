@@ -569,6 +569,7 @@ class AdminController extends Controller
                 'users.email as email',
                 'agent_services.service_name as service_name',
                 'agent_services.phone_number as phone_number',
+                'agent_services.short_description as short_description'
             )->get();
         
         return response()->json(['success' => true, 'services' => $referrals]);
