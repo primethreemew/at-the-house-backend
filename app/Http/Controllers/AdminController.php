@@ -615,10 +615,9 @@ class AdminController extends Controller
                     'referrals.*', 
                     'agent_services.service_name as service_name', 
                     'agent_services.short_description as short_description', 
-                    'agent_services.message_number as message_number', 
+                    'agent_services.email as email', 
                     'agent_services.phone_number as phone_number',
                     'agent_services.featured_image as featured_image',
-                    'agent_services.banner_image as banner_image',
                 )
                // ->where('referrals.status', 'approved')
                 ->where('referrals.referrer_id', $user->id) // Check if referrer_id matches the user's id
@@ -627,9 +626,6 @@ class AdminController extends Controller
                 foreach ($referrals as $referral) {
                     if ($referral->featured_image && !str_starts_with($referral->featured_image, 'http')) {
                         $referral->featured_image = url('storage/' . $referral->featured_image);
-                    }
-                    if ($referral->banner_image && !str_starts_with($referral->banner_image, 'http')) {
-                        $referral->banner_image = url('storage/' . $referral->banner_image);
                     }
                 }
 
@@ -672,21 +668,26 @@ class AdminController extends Controller
                     'referrals.*',
                     'agent_services.service_name as service_name', 
                     'agent_services.short_description as short_description', 
-                    'agent_services.message_number as message_number', 
+                    'agent_services.email as email', 
                     'agent_services.phone_number as phone_number',
-                    'agent_services.featured_image as featured_image',
-                    'agent_services.banner_image as banner_image'
+                    'agent_services.featured_image as featured_image'
                 )
                 ->where('referrals.referrer_id', $user->id)
                 ->where('referrals.agent_service_id', $serviceId)
                 ->first();
 
-            
+            if (!$referral) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No referral found for this service',
+                ], 404);
+            }
+
+            // $referral->featured_image = $referral->featured_image
+            // ? url('storage/' . $referral->featured_image)
+            // : null;
             if ($referral->featured_image && !str_starts_with($referral->featured_image, 'http')) {
                 $referral->featured_image = url('storage/' . $referral->featured_image);
-            }
-            if ($referral->banner_image && !str_starts_with($referral->banner_image, 'http')) {
-                $referral->banner_image = url('storage/' . $referral->banner_image);
             }
             
             // Check if a referral exists
