@@ -594,26 +594,34 @@ class AuthController extends Controller
     }
 
     public function updateProfileApp(Request $request, User $user)
-{
-    try {
-        $user = User::findOrFail($user->id);
-        $loggedInUser = $request->user();
+    {
+        try {
+            $user = User::findOrFail($user->id);
+            $loggedInUser = $request->user();
 
-        if ($loggedInUser->hasRole('admin') || $loggedInUser->id === $user->id) {
+            if ($loggedInUser->hasRole('admin') || $loggedInUser->id === $user->id) {
 
-            // Validation rules
-            $rules = [
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-                'phone' => 'required|string|max:255',
-                'gender' => 'nullable|in:male,female,other',
-                'birthdate' => 'nullable|date|date_format:m/d/Y',
-                'profile_photo_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-                // 'currentpassword' => 'nullable|string|min:8',
-                // 'newpassword' => 'nullable|string|min:8|same:confirmnewpassword',
+                // Validation rules
+                $rules = [
+                    'name' => 'required|string|max:255',
+                    'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+                    //'phone' => 'required|string|max:255',
+                    'phone' => ['required', 'string', 'regex:/^\d{3}-\d{3}-\d{4}$/', 'max:255'],
+                    'gender' => 'nullable|in:male,female,other',
+                    'birthdate' => 'nullable|date|date_format:m/d/Y',
+                    'profile_photo_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                    // 'currentpassword' => 'nullable|string|min:8',
+                    // 'newpassword' => 'nullable|string|min:8|same:confirmnewpassword',
+                ];
+
+            $messages = [
+                'phone.regex' => 'The phone number must be in the format 202-123-4567.',
             ];
+    
+            // Validate the request
+            $validatedData = $request->validate($rules, $messages);
 
-            $request->validate($rules);
+            //$request->validate($rules);
 
             // Update the user profile details
             $updateData = $request->only(['name', 'email', 'phone', 'gender', 'birthdate']);
