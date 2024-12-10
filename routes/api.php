@@ -139,6 +139,7 @@ Route::middleware('auth:sanctum','verified')->group(function () {
     Route::middleware('role:user')->group(function () {
         // Add user-specific routes if needed
     });
+    //Route::post('/admin/register-agent', [AdminController::class, 'registerAgent'])->middleware('auth:sanctum');
 
     // Routes for admin
     Route::middleware('role:admin')->group(function () {

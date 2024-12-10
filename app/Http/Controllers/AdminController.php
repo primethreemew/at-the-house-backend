@@ -71,30 +71,42 @@ class AdminController extends Controller
 
     public function registerAgent(RegisterUserRequest $request)
     {
-        // Check if the authenticated user is an admin
-        if (Auth::user()->roles->contains('name', 'admin')) {
-            // Create a new user with the agent role
-            $agent = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'password' => bcrypt($request->password),
-            ]);
+        try {
+            // Check if the authenticated user is an admin
+            if (Auth::user()->roles->contains('name', 'admin')) {
+                // Check if the email already exists
+                if (User::where('email', $request->email)->exists()) {
+                    return response()->json(['error' => 'Email already exists.'], 422);
+                }
 
-            // Assign the agent role to the new user
-            $agent->roles()->attach(Role::where('name', 'agent')->first());
+                // Create a new user with the agent role
+                $agent = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'password' => bcrypt($request->password),
+                ]);
 
-            // Send email verification notification
-            if (!$agent->hasVerifiedEmail()) {
-                $agent->sendEmailVerificationNotification();
+                // Assign the agent role to the new user
+                $agent->roles()->attach(Role::where('name', 'agent')->first());
+
+                // Send email verification notification (optional)
+                // if (!$agent->hasVerifiedEmail()) {
+                //     $agent->sendEmailVerificationNotification();
+                // }
+
+                return response()->json(['message' => 'Verification Request Sent!']);
             }
 
-            return response()->json(['message' => 'Verification Request Sent!']);
+            // If not an admin, return an error response
+            return response()->json(['error' => 'Unauthorized'], 403);
+        } catch (\Exception $e) {
+            // Return an error response
+            return response()->json([
+                'error' => 'Failed to register agent. Please try again later.',
+            ], 500);
         }
-
-        // If not an admin, return an error response
-        return response()->json(['error' => 'Unauthorized'], 403);
-    }
+    }   
 
     public function registerAgentApp(RegisterUserRequest $request)
     {
