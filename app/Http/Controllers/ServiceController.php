@@ -169,13 +169,13 @@ class ServiceController extends Controller
         }
 
         try {
-                $allowedCategoryTypes = ['popular', 'most_demanding'];
-                $result = [];
+                // $allowedCategoryTypes = ['popular', 'most_demanding'];
+                // $result = [];
 
-                foreach ($allowedCategoryTypes as $categoryType) {
+                // foreach ($allowedCategoryTypes as $categoryType) {
                     $services = DB::table('agent_services')
                         ->join('services', 'agent_services.category_id', '=', 'services.id')
-                        ->where('agent_services.service_type', $categoryType)
+                        //->where('agent_services.service_type', $categoryType)
                         ->select('agent_services.*', 'services.category_name', 'services.category_type')
                         ->get();
 
@@ -188,10 +188,10 @@ class ServiceController extends Controller
                         unset($service->hours);
                     }
 
-                    $result[$categoryType] = $services;
-                }
+                    //$result[$categoryType] = $services;
+                //}
 
-                return response()->json(['success' => true, 'services' => $result]);
+                return response()->json(['success' => true, 'services' => $services]);
 
         } catch (\Exception $e) {
             return response()->json([
