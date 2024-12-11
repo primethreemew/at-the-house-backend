@@ -396,15 +396,16 @@ class AdminController extends Controller
 
     public function getAllRecommended()
     {
-        $allowedCategoryTypes = ['popular', 'most_demanding'];
-        $result = [];
+        // $allowedCategoryTypes = ['popular', 'most_demanding'];
+        // $result = [];
 
         try {
-            $recommended = DB::select("SELECT category_name FROM services");
+            $isRecommended = 'isRecommended'; // or any dynamic value
+            $recommended = DB::select("SELECT category_name FROM services WHERE recommended = ?", [$isRecommended]);    
             // Return all services grouped by category type
             return response()->json(['success' => true, 'recommended' => $recommended]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'An error occurred while retrieving categories', 'error' => $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'An error occurred while retrieving recommended categories', 'error' => $e->getMessage()], 500);
         }
     }
 
