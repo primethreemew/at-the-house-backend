@@ -401,7 +401,7 @@ class AdminController extends Controller
 
         try {
             $isRecommended = 'isRecommended'; // or any dynamic value
-            $recommended = DB::select("SELECT category_name FROM services WHERE recommended = ?", [$isRecommended]);    
+            $recommended = DB::select("SELECT id,category_name FROM services WHERE recommended = ?", [$isRecommended]);    
             // Return all services grouped by category type
             return response()->json(['success' => true, 'recommended' => $recommended]);
         } catch (\Exception $e) {
