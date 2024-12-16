@@ -265,7 +265,10 @@ class ServiceController extends Controller
             $close = $dayHours['close'] ?? null;
 
             if (empty($open) && empty($close)) {
-                $formattedHours[$dayHours['day']] = ['Closed'];
+                $formattedHours[$dayHours['day']] = [
+                    "open" => "Close",
+                    "close" => "Close"
+                ];
             } else {
                 $formattedHours[$dayHours['day']] = [
                     'open' => $open ? date("h:i A", strtotime($open)) : '--',
@@ -420,7 +423,7 @@ class ServiceController extends Controller
             // Optionally process the hours field
             if ($service->hours) {
                 $service->formatted_hours = $this->formatHours($service->hours);
-                unset($service->hours); // Remove the original hours field if not needed
+                unset($service->hours); 
             }
     
             return response()->json(['success' => true, 'result' => $service]);
