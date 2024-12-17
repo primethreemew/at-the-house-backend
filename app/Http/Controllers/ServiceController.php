@@ -608,12 +608,25 @@ class ServiceController extends Controller
 
     private function getClientCoordinates()
     {
-        $ip = request()->ip();
+        $ip = $this->getUserIpAddr();
         $location = Location::get($ip);
         $latitude = $location->latitude;
         $longitude = $location->longitude;
 
         return response()->json(['latitude' => $latitude, 'longitude' => $longitude]);
+    }
+
+    private function getUserIpAddr()
+    {
+        $ipaddress = '';
+        if (isset($_SERVER['HTTP_CLIENT_IP'])) $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+        else if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        else if (isset($_SERVER['HTTP_X_FORWARDED'])) $ipaddress = $_SERVER['HTTP_X_FORWARDED'];
+        else if (isset($_SERVER['HTTP_FORWARDED_FOR'])) $ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
+        else if (isset($_SERVER['HTTP_FORWARDED'])) $ipaddress = $_SERVER['HTTP_FORWARDED'];
+        else if (isset($_SERVER['REMOTE_ADDR'])) $ipaddress = $_SERVER['REMOTE_ADDR'];
+        else $ipaddress = 'UNKNOWN';
+        return $ipaddress;
     }
 
     private function getDistance($latitude1, $longitude1, $latitude2, $longitude2)
