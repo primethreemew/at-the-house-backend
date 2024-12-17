@@ -450,13 +450,13 @@ class AdminController extends Controller
             ];
             
             // Check if a base64 image string or a file upload is provided
-            if ($request->has('category_image')) {
-                $base64Image = $request->input('category_image');
+            if ($request->has('image')) {
+                $base64Image = $request->input('image');
                 
                 // Remove "data:image/png;base64," part if it exists
                 $base64Image = preg_replace('/^data:image\/\w+;base64,/', '', $base64Image);
                 $imageData = base64_decode($base64Image);
-
+                
                 // Define the file name and path
                 $imageName = uniqid() . '.png';  // you can use png or derive from actual image mime type
                 $imagePath = 'images/' . $imageName;
@@ -465,10 +465,10 @@ class AdminController extends Controller
                 \Storage::disk('public')->put($imagePath, $imageData);
 
                 // Update image path in data array
-                $dataToUpdate['category_image'] = $imagePath;
+                $dataToUpdate['image'] = $imagePath;
             }
 
-            
+            \Log::info('File is present.', ['filename' => $dataToUpdate]);
             // Update the service with new data
             $service->update($dataToUpdate);
 
