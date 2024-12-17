@@ -22,7 +22,7 @@ class ServiceController extends Controller
     public function agentServiceCreate(Request $request)
     {
         $request->validate([
-            'service_type'=> 'required',
+            'service_type' => 'required',
             'service_name' => 'required',
             'short_description' => 'required',
             'address' => 'required',
@@ -35,7 +35,7 @@ class ServiceController extends Controller
             'website' => 'required',
             'hours' => 'required', // Add this line for hours validation
             //'featured_image' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
-           // 'banner_image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            // 'banner_image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $user = auth()->user();
@@ -83,7 +83,7 @@ class ServiceController extends Controller
             if ($request->hasFile('featured_image')) {
                 $featuredImage = $request->file('featured_image');
                 $filePath = $featuredImage->store('featured_image', 'public'); // Stores in storage/app/public/featured_images
-        
+
                 $service->featured_image = $filePath;
             } else {
                 $defaultImagePath = 'featured_image/default_image.png';
@@ -105,7 +105,7 @@ class ServiceController extends Controller
      */
     public function getAllAgentServices()
     {
-        
+
         $user = Auth::user();
         if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 403);
@@ -124,18 +124,18 @@ class ServiceController extends Controller
                 }
             }
             return response()->json(['success' => true, 'services' => $services]);
-        }elseif ($user->hasRole('admin')) {
+        } elseif ($user->hasRole('admin')) {
             $allowedCategoryTypes = ['popular', 'most_demanding'];
             $result = [];
 
             try {
                 foreach ($allowedCategoryTypes as $categoryType) {
-                // $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
-                $services = DB::table('agent_services')
-                    ->join('services', 'agent_services.category_id', '=', 'services.id')
-                    ->where('agent_services.service_type', [$categoryType])
-                    ->select('agent_services.*', 'services.category_name', 'services.category_type')
-                    ->get();
+                    // $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
+                    $services = DB::table('agent_services')
+                        ->join('services', 'agent_services.category_id', '=', 'services.id')
+                        ->where('agent_services.service_type', [$categoryType])
+                        ->select('agent_services.*', 'services.category_name', 'services.category_type')
+                        ->get();
                     $result[$categoryType] = $services;
                 }
 
@@ -151,11 +151,10 @@ class ServiceController extends Controller
 
                 // Return all services grouped by category type
                 return response()->json(['success' => true, 'services' => $result]);
-
             } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
             }
-        }else{
+        } else {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
     }
@@ -169,30 +168,29 @@ class ServiceController extends Controller
         }
 
         try {
-                // $allowedCategoryTypes = ['popular', 'most_demanding'];
-                // $result = [];
+            // $allowedCategoryTypes = ['popular', 'most_demanding'];
+            // $result = [];
 
-                // foreach ($allowedCategoryTypes as $categoryType) {
-                    $services = DB::table('agent_services')
-                        ->join('services', 'agent_services.category_id', '=', 'services.id')
-                        //->where('agent_services.service_type', $categoryType)
-                        ->select('agent_services.*', 'services.category_name', 'services.category_type')
-                        ->get();
+            // foreach ($allowedCategoryTypes as $categoryType) {
+            $services = DB::table('agent_services')
+                ->join('services', 'agent_services.category_id', '=', 'services.id')
+                //->where('agent_services.service_type', $categoryType)
+                ->select('agent_services.*', 'services.category_name', 'services.category_type')
+                ->get();
 
-                    foreach ($services as $service) {
-                        $service->featured_image = $service->featured_image
-                            ? url('storage/' . $service->featured_image)
-                            : null;
+            foreach ($services as $service) {
+                $service->featured_image = $service->featured_image
+                    ? url('storage/' . $service->featured_image)
+                    : null;
 
-                        $service->formatted_hours = $this->formatHours($service->hours);
-                        unset($service->hours);
-                    }
+                $service->formatted_hours = $this->formatHours($service->hours);
+                unset($service->hours);
+            }
 
-                    //$result[$categoryType] = $services;
-                //}
+            //$result[$categoryType] = $services;
+            //}
 
-                return response()->json(['success' => true, 'services' => $services]);
-
+            return response()->json(['success' => true, 'services' => $services]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -203,39 +201,48 @@ class ServiceController extends Controller
     }
 
 
-    public function getAllPopularServices()
+    public function getAllPopularServices(Request $request)
     {
+
         $user = Auth::user();
 
         if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
+        $coordinates = $this->getClientCoordinates();
+        $clientLatitude = $coordinates->original['latitude'];
+        $clientLongitude = $coordinates->original['longitude'];
+
         try {
-                $allowedCategoryTypes = ['popular'];
-                $result = [];
+            $allowedCategoryTypes = ['popular'];
+            $result = [];
 
-                foreach ($allowedCategoryTypes as $categoryType) {
-                    $services = DB::table('agent_services')
-                        ->join('services', 'agent_services.category_id', '=', 'services.id')
-                        ->where('agent_services.service_type', $categoryType)
-                        ->select('agent_services.*', 'services.category_name', 'services.category_type')
-                        ->get();
+            foreach ($allowedCategoryTypes as $categoryType) {
+                $services = DB::table('agent_services')
+                    ->join('services', 'agent_services.category_id', '=', 'services.id')
+                    ->where('agent_services.service_type', $categoryType)
+                    ->select('agent_services.*', 'services.category_name', 'services.category_type')
+                    ->get();
 
-                    foreach ($services as $service) {
-                        $service->featured_image = $service->featured_image
-                            ? url('storage/' . $service->featured_image)
-                            : null;
+                foreach ($services as $service) {
+                    $service->featured_image = $service->featured_image
+                        ? url('storage/' . $service->featured_image)
+                        : null;
 
-                        $service->formatted_hours = $this->formatHours($service->hours);
-                        unset($service->hours);
-                    }
+                    $service->formatted_hours = $this->formatHours($service->hours);
+                    unset($service->hours);
 
-                    $result[$categoryType] = $services;
+                    $serviceLatitude = $service->latitude;
+                    $serviceLongitude = $service->longitude;
+                    $distance = $this->getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
+                    $service->distance = $distance;
                 }
 
-                return response()->json(['success' => true, 'services' => $result]);
+                $result[$categoryType] = $services;
+            }
 
+            return response()->json(['success' => true, 'services' => $result]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -283,7 +290,7 @@ class ServiceController extends Controller
     public function getAgentServicesApp()
     {
         // $user = Auth::user();
-        
+
 
         // if ($user->hasRole('agent')) {
         //     $services = AgentService::where('user_id', $user->id)->get();
@@ -314,7 +321,7 @@ class ServiceController extends Controller
                     ->where('agent_services.service_type', $categoryType)
                     ->select('agent_services.*', 'services.category_name', 'services.category_type', 'services.image')
                     ->get();
-                    
+
                 foreach ($services as $service) {
                     if ($service->featured_image && !str_starts_with($service->featured_image, 'http')) {
                         $service->featured_image = url('storage/' . $service->featured_image);
@@ -333,10 +340,9 @@ class ServiceController extends Controller
                 }
                 $result[$categoryType] = $services;
             }
-        
+
             // Return all services grouped by category type
             return response()->json(['success' => true, 'services' => $result]);
-        
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
         }
@@ -353,22 +359,21 @@ class ServiceController extends Controller
 
         try {
             foreach ($allowedCategoryTypes as $categoryType) {
-                if($categoryType == "all"){
-                    $services = DB::select("SELECT * FROM agent_services");  
-                }else{
-                // $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
+                if ($categoryType == "all") {
+                    $services = DB::select("SELECT * FROM agent_services");
+                } else {
+                    // $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
                     $services = DB::table('agent_services')
-                    ->join('services', 'agent_services.category_id', '=', 'services.id')
-                    ->where('agent_services.service_type', [$categoryType])
-                    ->select('agent_services.*', 'services.category_name', 'services.category_type')
-                    ->get();
+                        ->join('services', 'agent_services.category_id', '=', 'services.id')
+                        ->where('agent_services.service_type', [$categoryType])
+                        ->select('agent_services.*', 'services.category_name', 'services.category_type')
+                        ->get();
                 }
                 $result[$categoryType] = $services;
             }
 
             // Return all services grouped by category type
             return response()->json(['success' => true, 'services' => $result]);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
         }
@@ -400,38 +405,47 @@ class ServiceController extends Controller
     public function getAgentServiceApp($id)
     {
         $user = Auth::user();
-    
+
         if (!$user) {
             return response()->json(['success' => false, 'data' => $user, 'error' => 'Unauthorized'], 403);
         }
-    
+
+        $coordinates = $this->getClientCoordinates();
+        $clientLatitude = $coordinates->original['latitude'];
+        $clientLongitude = $coordinates->original['longitude'];
+
         try {
             // Use first() instead of get() to fetch a single record
             $service = DB::table('agent_services')
-                        ->where('id', $id)
-                        ->first();
-    
+                ->where('id', $id)
+                ->first();
+
             if (!$service) {
                 return response()->json(['success' => false, 'error' => 'Service not found'], 404);
             }
-    
+
             // Append the full URL for the featured_image if it exists
             if ($service->featured_image) {
                 $service->featured_image = url('storage/' . $service->featured_image);
             }
-    
+
             // Optionally process the hours field
             if ($service->hours) {
                 $service->formatted_hours = $this->formatHours($service->hours);
-                unset($service->hours); 
+                unset($service->hours);
             }
-    
+
+            $serviceLatitude = $service->latitude;
+            $serviceLongitude = $service->longitude;
+            $distance = $this->getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
+            $service->distance = $distance;
+
             return response()->json(['success' => true, 'result' => $service]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
-    
+
 
     // public function getAgentServiceApp($id)
     // {
@@ -479,7 +493,7 @@ class ServiceController extends Controller
     {
         $user = Auth::user();
 
-        try { 
+        try {
             $service = AgentService::findOrFail($id);
             if ($service->featured_image) {
                 $service->featured_image = url('storage/' . $service->featured_image);
@@ -515,21 +529,21 @@ class ServiceController extends Controller
 
         try {
             $service = AgentService::findOrFail($id);
-            
+
             // Only update the featured image if a new image is provided
             if ($request->has('featuredImage') && !empty($request->input('featuredImage'))) {
                 $featuredImageData = $request->input('featuredImage');
-                
+
                 // Check if it's a base64 string and needs to be updated
                 if (strpos($featuredImageData, 'data:image') === 0) {
                     \Log::info('File is present.', ['filename' => $featuredImageData]);
                     $featuredImageData = str_replace('data:image/png;base64,', '', $featuredImageData);
                     $featuredImageData = str_replace(' ', '+', $featuredImageData);
                     $featuredImageName = uniqid() . '_featured.png'; // Ensure unique naming
-                    
+
                     // Save the image
                     Storage::disk('public')->put('featured_image/' . $featuredImageName, base64_decode($featuredImageData));
-                    
+
                     //$filePath = $featuredImageName->store('featured_image', 'public');
 
                     // Update the service with the new featured image path
@@ -598,7 +612,7 @@ class ServiceController extends Controller
         $location = Location::get($ip);
         $latitude = $location->latitude;
         $longitude = $location->longitude;
-        
+
         return response()->json(['latitude' => $latitude, 'longitude' => $longitude]);
     }
 
@@ -611,13 +625,13 @@ class ServiceController extends Controller
 
         $dlat = $lat2 - $lat1;
         $dlon = $lon2 - $lon1;
-        $a = sin($dlat/2) * sin($dlat/2) + cos($lat1) * cos($lat2) * sin($dlon/2) * sin($dlon/2);
-        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
-        
+        $a = sin($dlat / 2) * sin($dlat / 2) + cos($lat1) * cos($lat2) * sin($dlon / 2) * sin($dlon / 2);
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
         $r = 3959;
-        
+
         $distance = $r * $c;
-        
+
         return round($distance, 2);
     }
 }
