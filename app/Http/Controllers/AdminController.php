@@ -357,7 +357,7 @@ class AdminController extends Controller
                 }
             }
 
-            return response()->json(['success' => true, 'result' => $services]);
+            return response()->json(['success' => true, 'services' => $services]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
