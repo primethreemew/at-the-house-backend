@@ -167,6 +167,10 @@ class ServiceController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
+        $coordinates = $this->getClientCoordinates();
+        $clientLatitude = $coordinates->original['latitude'];
+        $clientLongitude = $coordinates->original['longitude'];
+
         try {
             // $allowedCategoryTypes = ['popular', 'most_demanding'];
             // $result = [];
@@ -185,6 +189,11 @@ class ServiceController extends Controller
 
                 $service->formatted_hours = $this->formatHours($service->hours);
                 unset($service->hours);
+
+                $serviceLatitude = $service->latitude;
+                $serviceLongitude = $service->longitude;
+                $distance = $this->getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
+                $service->distance = $distance;
             }
 
             //$result[$categoryType] = $services;
@@ -606,9 +615,9 @@ class ServiceController extends Controller
         }
     }
 
-    private function getClientCoordinates()
+    static public function getClientCoordinates()
     {
-        $ip = $this->getUserIpAddr();
+        $ip = self::getUserIpAddr();
         Log::info('IP Address:', ['ip' => $ip]);
         $location = Location::get($ip);
         $latitude = $location->latitude;
@@ -619,7 +628,7 @@ class ServiceController extends Controller
         return response()->json(['latitude' => $latitude, 'longitude' => $longitude]);
     }
 
-    private function getUserIpAddr()
+    static public function getUserIpAddr()
     {
         $ipaddress = '';
         if (isset($_SERVER['HTTP_CLIENT_IP'])) $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
@@ -637,7 +646,7 @@ class ServiceController extends Controller
         return $ipaddress;
     }
 
-    private function getDistance($latitude1, $longitude1, $latitude2, $longitude2)
+    static public function getDistance($latitude1, $longitude1, $latitude2, $longitude2)
     {
         $lat1 = deg2rad($latitude1);
         $lon1 = deg2rad($longitude1);
