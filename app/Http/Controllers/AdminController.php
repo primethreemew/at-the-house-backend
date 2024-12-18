@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Log;
 
@@ -52,7 +53,8 @@ class AdminController extends Controller
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
-    public function updateAgents($agentId){
+    public function updateAgents($agentId)
+    {
         if (Auth::user()->roles->contains('name', 'admin')) {
 
             // Find the service by ID
@@ -106,7 +108,7 @@ class AdminController extends Controller
                 'error' => 'Failed to register agent. Please try again later.',
             ], 500);
         }
-    }   
+    }
 
     public function registerAgentApp(RegisterUserRequest $request)
     {
@@ -216,13 +218,13 @@ class AdminController extends Controller
             $service = Service::create([
                 'category_name' => $request->input('category_name'),
                 'image' => $imagePath,
-                'category_type' => $request->input('category_type', 'category'), 
+                'category_type' => $request->input('category_type', 'category'),
                 'recommended' => $request->input('recommended'),
             ]);
 
             return response()->json(['message' => 'Service created successfully', 'service' => $service]);
         }
-  
+
         // If not an admin, return an error response
         return response()->json(['error' => 'Unauthorized'], 403);
     }
@@ -230,27 +232,26 @@ class AdminController extends Controller
     public function getAllServices()
     {
 
-        $allowedCategoryTypes = ['true', 'isRecommended' , 'all'];
+        $allowedCategoryTypes = ['true', 'isRecommended', 'all'];
         $result = [];
 
         try {
             foreach ($allowedCategoryTypes as $categoryType) {
-                if($categoryType == "all"){
-                    $services = DB::select("SELECT * FROM services");    
-                }elseif($categoryType == "true"){
-                   // $services = DB::select("SELECT * FROM services");
+                if ($categoryType == "all") {
+                    $services = DB::select("SELECT * FROM services");
+                } elseif ($categoryType == "true") {
+                    // $services = DB::select("SELECT * FROM services");
                     $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
-                }else{
+                } else {
                     $services = DB::select("SELECT * FROM services WHERE recommended = ?", [$categoryType]);
                 }
                 $result[$categoryType] = $services;
             }
             //$services = DB::select("SELECT * FROM services where category_type = '1'");
-            
+
             //$services = DB::select("SELECT * FROM services");
             // Return all services grouped by category type
             return response()->json(['success' => true, 'services' => $result]);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
         }
@@ -312,12 +313,16 @@ class AdminController extends Controller
             return response()->json(['success' => false, 'data' => $user, 'error' => 'Unauthorized'], 403);
         }
 
+        $coordinates = ServiceController::getClientCoordinates();
+        $clientLatitude = $coordinates->original['latitude'];
+        $clientLongitude = $coordinates->original['longitude'];
+
         try {
             $services = DB::table('agent_services')
-                        ->join('services', 'agent_services.category_id', '=', 'services.id')
-                        ->where('agent_services.category_id', $id)
-                        ->select('agent_services.*', 'services.category_name')
-                        ->get();
+                ->join('services', 'agent_services.category_id', '=', 'services.id')
+                ->where('agent_services.category_id', $id)
+                ->select('agent_services.*', 'services.category_name', 'agent_services.latitude as latitude', 'agent_services.longitude as longitude')
+                ->get();
 
             if ($services->isEmpty()) {
                 return response()->json(['success' => false, 'error' => 'Service not found'], 404);
@@ -354,6 +359,11 @@ class AdminController extends Controller
 
                     $service->formatted_hours = $formattedHours;
                     unset($service->hours);
+
+                    $serviceLatitude = $service->latitude;
+                    $serviceLongitude = $service->longitude;
+                    $distance = ServiceController::getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
+                    $service->distance = $distance;
                 }
             }
 
@@ -389,7 +399,6 @@ class AdminController extends Controller
 
             // Return all services grouped by category type
             return response()->json(['success' => true, 'services' => $result]);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
         }
@@ -404,7 +413,7 @@ class AdminController extends Controller
 
         try {
             $isRecommended = 'isRecommended'; // or any dynamic value
-            $recommended = DB::select("SELECT id,category_name FROM services WHERE recommended = ?", [$isRecommended]);    
+            $recommended = DB::select("SELECT id,category_name FROM services WHERE recommended = ?", [$isRecommended]);
             // Return all services grouped by category type
             return response()->json(['success' => true, 'recommended' => $recommended]);
         } catch (\Exception $e) {
@@ -412,20 +421,21 @@ class AdminController extends Controller
         }
     }
 
-    public function getAllRelevantSearch($categoryname){
+    public function getAllRelevantSearch($categoryname)
+    {
         $relevantCatId = DB::table('services')
-                        ->where('category_name', $categoryname)
-                        ->value('id');
+            ->where('category_name', $categoryname)
+            ->value('id');
 
         $relevantServices = DB::table('agent_services')
-                        ->where('category_id', $relevantCatId)->get();
-                        
+            ->where('category_id', $relevantCatId)->get();
+
         return response()->json(['success' => true, 'services' => $relevantServices]);
     }
 
-    public function updateService(Request $request, $serviceId) 
+    public function updateService(Request $request, $serviceId)
     {
-        
+
         // Check if the authenticated user is an admin
         if (Auth::user()->roles->contains('name', 'admin')) {
             // Validate the request data
@@ -433,7 +443,7 @@ class AdminController extends Controller
                 'category_name' => 'required|unique:services,category_name,' . $serviceId,
                 'category_type' => 'required|string',
                 'recommended' => 'required|in:notRecommended,isRecommended', // Ensure valid value for 'recommended'
-                'category_image' => 'nullable|string', 
+                'category_image' => 'nullable|string',
             ]);
 
             // Find the service by ID
@@ -448,19 +458,19 @@ class AdminController extends Controller
                 'category_type' => $request->input('category_type'),
                 'recommended' => $request->input('recommended'),
             ];
-            
+
             // Check if a base64 image string or a file upload is provided
             if ($request->has('image')) {
                 $base64Image = $request->input('image');
-                
+
                 // Remove "data:image/png;base64," part if it exists
                 $base64Image = preg_replace('/^data:image\/\w+;base64,/', '', $base64Image);
                 $imageData = base64_decode($base64Image);
-                
+
                 // Define the file name and path
                 $imageName = uniqid() . '.png';  // you can use png or derive from actual image mime type
                 $imagePath = 'images/' . $imageName;
-                
+
                 // Store image in the storage/app/public/images directory
                 \Storage::disk('public')->put($imagePath, $imageData);
 
@@ -514,7 +524,7 @@ class AdminController extends Controller
             if ($service->image && !str_starts_with($service->image, 'http')) {
                 $service->image = url('storage/' . $service->image);
             }
-    
+
 
             return response()->json(['service' => $service]);
         }
@@ -540,12 +550,12 @@ class AdminController extends Controller
         // If not an admin, return an error response
         return response()->json(['error' => 'Unauthorized'], 403);
     }
-    
+
     public function submitReferral($serviceId)
     {
         // Get the authenticated user
         $user = Auth::user();
-        
+
         // Check if the user is authenticated
         if (!$user) {
             return response()->json(['error' => 'User not authenticated'], 401);
@@ -557,14 +567,14 @@ class AdminController extends Controller
         // Check if the service exists
         if (!$service) {
             return response()->json(['error' => 'Service not found'], 404);
-        } 
+        }
 
         try {
             // Insert the referral into the database
             $referral = DB::table('referrals')->insert([
-                'referrer_id' => $user->id, 
-                'agent_service_id' => $serviceId, 
-                'status' => 'pending', 
+                'referrer_id' => $user->id,
+                'agent_service_id' => $serviceId,
+                'status' => 'pending',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -575,7 +585,6 @@ class AdminController extends Controller
                 'referral' => $referral,
                 'success' => true
             ], 201);
-
         } catch (\Exception $e) {
             // Return error response if insertion fails
             return response()->json([
@@ -585,7 +594,7 @@ class AdminController extends Controller
             ], 500);
         }
     }
-   
+
     public function allReferrals()
     {
         //$referrals = Referral::all();
@@ -599,7 +608,7 @@ class AdminController extends Controller
                 'agent_services.service_name as service_name',
                 'agent_services.phone_number as phone_number',
             )->get();
-        
+
         return response()->json(['success' => true, 'services' => $referrals]);
     }
 
@@ -609,7 +618,7 @@ class AdminController extends Controller
         $referrals = DB::table('referrals')
             ->where('status', "pending")
             ->get();
-        
+
         return response()->json(['success' => true, 'pendindreferrals' => $referrals]);
     }
 
@@ -624,26 +633,37 @@ class AdminController extends Controller
                 return response()->json(['message' => 'User not authenticated', 'success' => false], 401);
             }
 
+            $coordinates = ServiceController::getClientCoordinates();
+            $clientLatitude = $coordinates->original['latitude'];
+            $clientLongitude = $coordinates->original['longitude'];
+
             // Query to get referrals with 'approved' status and matching referrer_id
             $referrals = DB::table('referrals')
                 ->join('agent_services', 'referrals.agent_service_id', '=', 'agent_services.id')
+                ->join('users', 'agent_services.user_id', '=', 'users.id')
                 ->select(
-                    'referrals.*', 
-                    'agent_services.service_name as service_name', 
-                    'agent_services.short_description as short_description', 
-                    'agent_services.email as email', 
+                    'referrals.*',
+                    'agent_services.service_name as service_name',
+                    'agent_services.short_description as short_description',
+                    'users.email as email',
                     'agent_services.phone_number as phone_number',
                     'agent_services.featured_image as featured_image',
+                    'agent_services.latitude as latitude',
+                    'agent_services.longitude as longitude',
                 )
-               // ->where('referrals.status', 'approved')
-                ->where('referrals.referrer_id', $user->id) // Check if referrer_id matches the user's id
+                ->where('referrals.referrer_id', $user->id)
                 ->get();
 
-                foreach ($referrals as $referral) {
-                    if ($referral->featured_image && !str_starts_with($referral->featured_image, 'http')) {
-                        $referral->featured_image = url('storage/' . $referral->featured_image);
-                    }
+            foreach ($referrals as $referral) {
+                if ($referral->featured_image && !str_starts_with($referral->featured_image, 'http')) {
+                    $referral->featured_image = url('storage/' . $referral->featured_image);
                 }
+
+                $serviceLatitude = $referral->latitude;
+                $serviceLongitude = $referral->longitude;
+                $distance = ServiceController::getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
+                $referral->distance = $distance;
+            }
 
             // Check if no referrals are found
             if ($referrals->isEmpty()) {
@@ -651,7 +671,6 @@ class AdminController extends Controller
             }
 
             return response()->json(['success' => true, 'services' => $referrals]);
-            
         } catch (\Exception $e) {
             // Catch any unexpected errors and return a generic error response
             return response()->json(['message' => 'An error occurred: ' . $e->getMessage(), 'success' => false], 500);
@@ -668,29 +687,41 @@ class AdminController extends Controller
             return response()->json(['error' => 'User not authenticated'], 401);
         }
 
+        $coordinates = ServiceController::getClientCoordinates();
+        $clientLatitude = $coordinates->original['latitude'];
+        $clientLongitude = $coordinates->original['longitude'];
+
         // Find the service by ID
         $service = AgentService::find($serviceId);
 
         // Check if the service exists
         if (!$service) {
             return response()->json(['error' => 'Service not found'], 404);
-        } 
+        }
 
         try {
             // Fetch the referral data based on user ID and service ID
             $referral = DB::table('referrals')
                 ->join('agent_services', 'referrals.agent_service_id', '=', 'agent_services.id')
+                ->join('users', 'agent_services.user_id', '=', 'users.id')
                 ->select(
                     'referrals.*',
-                    'agent_services.service_name as service_name', 
-                    'agent_services.short_description as short_description', 
-                    'agent_services.email as email', 
+                    'agent_services.service_name as service_name',
+                    'agent_services.short_description as short_description',
+                    'users.email as email',
                     'agent_services.phone_number as phone_number',
-                    'agent_services.featured_image as featured_image'
+                    'agent_services.featured_image as featured_image',
+                    'agent_services.latitude as latitude',
+                    'agent_services.longitude as longitude',
                 )
                 ->where('referrals.referrer_id', $user->id)
                 ->where('referrals.agent_service_id', $serviceId)
                 ->first();
+
+            $serviceLatitude = $referral->latitude;
+            $serviceLongitude = $referral->longitude;
+            $distance = ServiceController::getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
+            $referral->distance = $distance;
 
             if (!$referral) {
                 return response()->json([
@@ -705,7 +736,7 @@ class AdminController extends Controller
             if ($referral->featured_image && !str_starts_with($referral->featured_image, 'http')) {
                 $referral->featured_image = url('storage/' . $referral->featured_image);
             }
-            
+
             // Check if a referral exists
             if (!$referral) {
                 return response()->json([
@@ -720,7 +751,6 @@ class AdminController extends Controller
                 'referral' => $referral,
                 'success' => true
             ], 200);
-
         } catch (\Exception $e) {
             // Return error response if fetching fails
             return response()->json([
@@ -734,24 +764,23 @@ class AdminController extends Controller
 
     public function statusChange(Request $request, $referralId)
     {
-        
+
         $referral = Referral::find($referralId);
 
         if (!$referral) {
             return response()->json(['error' => 'Referral not found'], 404);
         }
-    
+
         $validatedData = $request->validate([
             'status' => 'required|string|in:pending,approved,denied',
         ]);
-    
+
         $referral->status = $validatedData['status'];
-    
+
         if ($referral->save()) {
             return response()->json(['message' => 'Referral status updated successfully.', 'referral' => $referral, 'success' => true], 200);
         }
-    
+
         return response()->json(['error' => 'Failed to update referral status'], 500);
     }
-
-} 
+}
