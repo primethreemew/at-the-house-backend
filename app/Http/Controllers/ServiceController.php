@@ -609,9 +609,12 @@ class ServiceController extends Controller
     private function getClientCoordinates()
     {
         $ip = $this->getUserIpAddr();
+        Log::info('IP Address:', ['ip' => $ip]);
         $location = Location::get($ip);
         $latitude = $location->latitude;
         $longitude = $location->longitude;
+        Log::info('Latitude:', ['latitude' => $latitude]);
+        Log::info('Longitude:', ['longitude' => $longitude]);
 
         return response()->json(['latitude' => $latitude, 'longitude' => $longitude]);
     }
@@ -625,7 +628,7 @@ class ServiceController extends Controller
         else if (isset($_SERVER['HTTP_FORWARDED_FOR'])) $ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
         else if (isset($_SERVER['HTTP_FORWARDED'])) $ipaddress = $_SERVER['HTTP_FORWARDED'];
         else if (isset($_SERVER['REMOTE_ADDR'])) $ipaddress = $_SERVER['REMOTE_ADDR'];
-        else $ipaddress = 'UNKNOWN';
+        else $ipaddress = request()->ip();
         return $ipaddress;
     }
 
