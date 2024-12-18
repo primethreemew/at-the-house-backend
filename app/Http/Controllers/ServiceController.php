@@ -629,6 +629,11 @@ class ServiceController extends Controller
         else if (isset($_SERVER['HTTP_FORWARDED'])) $ipaddress = $_SERVER['HTTP_FORWARDED'];
         else if (isset($_SERVER['REMOTE_ADDR'])) $ipaddress = $_SERVER['REMOTE_ADDR'];
         else $ipaddress = request()->ip();
+
+        if (strpos($ipaddress, ':') !== false) {
+            $ipaddress = explode(':', $ipaddress)[0];
+        }
+
         return $ipaddress;
     }
 
