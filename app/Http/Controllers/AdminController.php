@@ -345,8 +345,8 @@ class AdminController extends Controller
                         if (empty($open) && empty($close)) {
                             // If both open and close are empty, set as Closed
                             $formattedHours[$dayHours['day']] = [
-                                "open" => "Close",
-                                "close" => "Close"
+                                "open" => "Closed",
+                                "close" => "Closed"
                             ];
                         } else {
                             // Otherwise, format the open and close times

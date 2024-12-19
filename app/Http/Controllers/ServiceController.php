@@ -282,8 +282,8 @@ class ServiceController extends Controller
 
             if (empty($open) && empty($close)) {
                 $formattedHours[$dayHours['day']] = [
-                    "open" => "Close",
-                    "close" => "Close"
+                    "open" => "Closed",
+                    "close" => "Closed"
                 ];
             } else {
                 $formattedHours[$dayHours['day']] = [
