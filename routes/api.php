@@ -39,7 +39,7 @@ Route::prefix('mobile')->group(function () {
     Route::post('/logins', [AuthController::class, 'loginApp'])->name('mobile.login');
     Route::post('/verify-otp', [AuthController::class, 'verifyOtpApp']);
     Route::post('/verify-email', [AuthController::class, 'verifyEmailApp']);
-    
+
     //Route::get('/admin/services/{id}', [ServiceController::class, 'getAgentServiceApp']);
     Route::get('/admin/services/{serviceId}', [AdminController::class, 'viewServiceApp']);
     Route::get('/admin/recommended', [AdminController::class, 'getAllRecommended']);
@@ -53,22 +53,22 @@ Route::prefix('mobile')->group(function () {
     Route::middleware('auth:sanctum')->get('/admin/categories/explored', [AdminController::class, 'getAllExploredCategory']);
 
     // Catgory by list of services
-    Route::middleware('auth:sanctum')->get('/admin/category/{id}', [AdminController::class, 'getServicesbyCategoryID']);
+    Route::middleware('auth:sanctum')->get('/admin/category/', [AdminController::class, 'getServicesbyCategoryID']);
 
     // Retrive All Agents Services
     Route::middleware('auth:sanctum')->get('/agent-services', [ServiceController::class, 'getAllAgentServicesApp']);
-    
+
     //Popular services
     Route::middleware('auth:sanctum')->get('/services/popular', [ServiceController::class, 'getAllPopularServices']);
-    
+
     //Single service By id
-    Route::middleware('auth:sanctum')->get('/services/{id}', [ServiceController::class, 'getAgentServiceApp']);
+    Route::middleware('auth:sanctum')->get('/services', [ServiceController::class, 'getAgentServiceApp']);
     //Route::middleware('auth:sanctum')->get('/admin/services', [ServiceController::class, 'getSingleServiceApp']);
 
     //Route::put('/referral/{serviceId}', [AdminController::class, 'submitReferral']);
     Route::middleware('role:admin|agent')->group(function () {
-        
-        
+
+
 
         // Admin and Agent route to create agent service
         Route::post('/agent-services/create', [ServiceController::class, 'agentServiceCreate']);
@@ -87,7 +87,7 @@ Route::prefix('mobile')->group(function () {
 
 // Routes requiring authentication and email verification
 Route::middleware('auth:sanctum', 'verified')->prefix('mobile')->group(function () {
-    
+
     Route::post('/change-password', [AuthController::class, 'changePasswordApp']);
     Route::put('/profile/{user}', [AuthController::class, 'updateProfileApp']);
     Route::middleware('role:admin')->group(function () {
@@ -101,7 +101,7 @@ Route::middleware('auth:sanctum', 'verified')->prefix('mobile')->group(function 
     });
     Route::put('/referral/{serviceId}', [AdminController::class, 'submitReferral']);
     Route::get('/referrals', [AdminController::class, 'allReferralsApp']);
-    Route::get('/single-referral/{serviceId}', [AdminController::class, 'singleReferralsApp']);
+    Route::get('/single-referral', [AdminController::class, 'singleReferralsApp']);
 });
 
 // Send reset password email
@@ -128,8 +128,8 @@ Route::get('/admin/servicess', [AdminController::class, 'getAllServices']);
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth:sanctum','verified')->group(function () {
-    
+Route::middleware('auth:sanctum', 'verified')->group(function () {
+
     // Get authenticated user details
     Route::get('/user', function (Request $request) {
         return $request->user();

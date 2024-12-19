@@ -8,8 +8,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
-use Stevebauman\Location\Facades\Location;
 
 class ServiceController extends Controller
 {
@@ -33,9 +31,7 @@ class ServiceController extends Controller
             'phone_number' => 'required',
             'category_id' => 'required',
             'website' => 'required',
-            'hours' => 'required', // Add this line for hours validation
-            //'featured_image' => 'required|image|mimes:jpeg,png,jpg|max:2048', 
-            // 'banner_image' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'hours' => 'required',
         ]);
 
         $user = auth()->user();
@@ -130,7 +126,6 @@ class ServiceController extends Controller
 
             try {
                 foreach ($allowedCategoryTypes as $categoryType) {
-                    // $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
                     $services = DB::table('agent_services')
                         ->join('services', 'agent_services.category_id', '=', 'services.id')
                         ->where('agent_services.service_type', [$categoryType])
@@ -149,7 +144,6 @@ class ServiceController extends Controller
                     }
                 }
 
-                // Return all services grouped by category type
                 return response()->json(['success' => true, 'services' => $result]);
             } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
@@ -159,7 +153,7 @@ class ServiceController extends Controller
         }
     }
 
-    public function getAllAgentServicesApp()
+    public function getAllAgentServicesApp(Request $request)
     {
         $user = Auth::user();
 
@@ -167,18 +161,17 @@ class ServiceController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $coordinates = $this->getClientCoordinates();
-        $clientLatitude = $coordinates->original['latitude'];
-        $clientLongitude = $coordinates->original['longitude'];
+
+        if ($request->input('latitude') && $request->input('longitude')) {
+            $clientLatitude = $request->input('latitude');
+            $clientLongitude = $request->input('longitude');
+        } else {
+            return response()->json(['success' => false, 'error' => 'Latitude and Longitude are required'], 400);
+        }
 
         try {
-            // $allowedCategoryTypes = ['popular', 'most_demanding'];
-            // $result = [];
-
-            // foreach ($allowedCategoryTypes as $categoryType) {
             $services = DB::table('agent_services')
                 ->join('services', 'agent_services.category_id', '=', 'services.id')
-                //->where('agent_services.service_type', $categoryType)
                 ->select('agent_services.*', 'services.category_name', 'services.category_type')
                 ->get();
 
@@ -195,9 +188,6 @@ class ServiceController extends Controller
                 $distance = $this->getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
                 $service->distance = $distance;
             }
-
-            //$result[$categoryType] = $services;
-            //}
 
             return response()->json(['success' => true, 'services' => $services]);
         } catch (\Exception $e) {
@@ -219,9 +209,12 @@ class ServiceController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $coordinates = $this->getClientCoordinates();
-        $clientLatitude = $coordinates->original['latitude'];
-        $clientLongitude = $coordinates->original['longitude'];
+        if ($request->input('latitude') && $request->input('longitude')) {
+            $clientLatitude = $request->input('latitude');
+            $clientLongitude = $request->input('longitude');
+        } else {
+            return response()->json(['success' => false, 'error' => 'Latitude and Longitude are required'], 400);
+        }
 
         try {
             $allowedCategoryTypes = ['popular'];
@@ -296,29 +289,19 @@ class ServiceController extends Controller
         return $formattedHours;
     }
 
-    public function getAgentServicesApp()
+    public function getAgentServicesApp(Request $request)
     {
-        // $user = Auth::user();
-
-
-        // if ($user->hasRole('agent')) {
-        //     $services = AgentService::where('user_id', $user->id)->get();
-        // } elseif ($user->hasRole('admin')) {
-        //     $services = AgentService::all();
-        // } else {
-        //     return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
-        // }
-
-        // return response()->json(['success' => true, 'services' => $services]);
-
         $user = Auth::user();
         if (!$user) {
             return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
         }
 
-        $coordinates = $this->getClientCoordinates();
-        $clientLatitude = $coordinates->original['latitude'];
-        $clientLongitude = $coordinates->original['longitude'];
+        if ($request->input('latitude') && $request->input('longitude')) {
+            $clientLatitude = $request->input('latitude');
+            $clientLongitude = $request->input('longitude');
+        } else {
+            return response()->json(['success' => false, 'error' => 'Latitude and Longitude are required'], 400);
+        }
 
         $allowedCategoryTypes = ['popular', 'most_demanding'];
         $result = [];
@@ -350,14 +333,10 @@ class ServiceController extends Controller
                 $result[$categoryType] = $services;
             }
 
-            // Return all services grouped by category type
             return response()->json(['success' => true, 'services' => $result]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
         }
-        // }else{
-        //     return response()->json(['error' => 'Unauthorized'], 403);
-        // }
     }
 
     public function getAllAgentsServices()
@@ -371,7 +350,6 @@ class ServiceController extends Controller
                 if ($categoryType == "all") {
                     $services = DB::select("SELECT * FROM agent_services");
                 } else {
-                    // $services = DB::select("SELECT * FROM services WHERE category_type = ?", [$categoryType]);
                     $services = DB::table('agent_services')
                         ->join('services', 'agent_services.category_id', '=', 'services.id')
                         ->where('agent_services.service_type', [$categoryType])
@@ -381,37 +359,13 @@ class ServiceController extends Controller
                 $result[$categoryType] = $services;
             }
 
-            // Return all services grouped by category type
             return response()->json(['success' => true, 'services' => $result]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
         }
     }
 
-    // public function getAgentServiceApp($id)
-    // {
-    //     $user = Auth::user();
-
-    //     try { 
-    //         $service = AgentService::findOrFail($id);
-
-    //         // // Check user roles if needed, e.g., agents can only access their own services
-    //         // if ($user->hasRole('agent') && $service->user_id != $user->id) {
-    //         //     return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
-    //         // }
-
-    //         // Append URL to the featured image if it exists
-    //         if ($service->featured_image) {
-    //             $service->featured_image = url('storage/' . $service->featured_image);
-    //         }
-
-    //         return response()->json(['success' => true, 'service' => $service]);
-    //     } catch (ModelNotFoundException $e) {
-    //         return response()->json(['success' => false, 'error' => 'Service not found'], 404);
-    //     }
-    // }
-
-    public function getAgentServiceApp($id)
+    public function getAgentServiceApp(Request $request)
     {
         $user = Auth::user();
 
@@ -419,12 +373,16 @@ class ServiceController extends Controller
             return response()->json(['success' => false, 'data' => $user, 'error' => 'Unauthorized'], 403);
         }
 
-        $coordinates = $this->getClientCoordinates();
-        $clientLatitude = $coordinates->original['latitude'];
-        $clientLongitude = $coordinates->original['longitude'];
+        $id = $request->input('id');
+
+        if ($request->input('latitude') && $request->input('longitude')) {
+            $clientLatitude = $request->input('latitude');
+            $clientLongitude = $request->input('longitude');
+        } else {
+            return response()->json(['success' => false, 'error' => 'Latitude and Longitude are required'], 400);
+        }
 
         try {
-            // Use first() instead of get() to fetch a single record
             $service = DB::table('agent_services')
                 ->where('id', $id)
                 ->first();
@@ -433,12 +391,10 @@ class ServiceController extends Controller
                 return response()->json(['success' => false, 'error' => 'Service not found'], 404);
             }
 
-            // Append the full URL for the featured_image if it exists
             if ($service->featured_image) {
                 $service->featured_image = url('storage/' . $service->featured_image);
             }
 
-            // Optionally process the hours field
             if ($service->hours) {
                 $service->formatted_hours = $this->formatHours($service->hours);
                 unset($service->hours);
@@ -454,43 +410,6 @@ class ServiceController extends Controller
             return response()->json(['success' => false, 'error' => 'An error occurred: ' . $e->getMessage()], 500);
         }
     }
-
-
-    // public function getAgentServiceApp($id)
-    // {
-    //     $user = Auth::user();
-
-    //     if (!$user) {
-    //         return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
-    //     }
-
-    //     try { 
-    //         // Use a join to get additional details from the services table
-    //         $service = DB::table('agent_services')
-    //                     ->where('id', $id)
-    //                     ->get();
-
-    //         if (!$service) {
-    //             return response()->json(['success' => false, 'error' => 'Service not found'], 404);
-    //         }
-
-    //         // Append URL to the featured image if it exists
-    //         if ($service->featured_image) {
-    //             $service->featured_image = url('storage/' . $service->featured_image);
-    //         }
-
-    //         $service->formatted_hours = $this->formatHours($service->hours);
-    //                     unset($service->hours);
-
-    //         if ($service->image) {
-    //             $service->image = url('storage/' . $service->image);
-    //         }
-
-    //         return response()->json(['success' => true, 'service' => $service]);
-    //     } catch (ModelNotFoundException $e) {
-    //         return response()->json(['success' => false, 'error' => 'Service not found'], 404);
-    //     }
-    // }
 
     /**
      * Get a specific agent service by ID.
@@ -511,9 +430,7 @@ class ServiceController extends Controller
                 $service->banner_image = url('storage/' . $service->banner_image);
             }
             if ($user->hasRole('agent') && $service->user_id == $user->id) {
-                // Agent can retrieve their own service
             } elseif ($user->hasRole('admin') || $user->hasRole('user')) {
-                // Admin and User can retrieve any service
             } else {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
@@ -539,28 +456,20 @@ class ServiceController extends Controller
         try {
             $service = AgentService::findOrFail($id);
 
-            // Only update the featured image if a new image is provided
             if ($request->has('featuredImage') && !empty($request->input('featuredImage'))) {
                 $featuredImageData = $request->input('featuredImage');
 
-                // Check if it's a base64 string and needs to be updated
                 if (strpos($featuredImageData, 'data:image') === 0) {
-                    \Log::info('File is present.', ['filename' => $featuredImageData]);
                     $featuredImageData = str_replace('data:image/png;base64,', '', $featuredImageData);
                     $featuredImageData = str_replace(' ', '+', $featuredImageData);
-                    $featuredImageName = uniqid() . '_featured.png'; // Ensure unique naming
+                    $featuredImageName = uniqid() . '_featured.png';
 
-                    // Save the image
                     Storage::disk('public')->put('featured_image/' . $featuredImageName, base64_decode($featuredImageData));
 
-                    //$filePath = $featuredImageName->store('featured_image', 'public');
-
-                    // Update the service with the new featured image path
                     $service->featured_image = 'featured_image/' . $featuredImageName;
                 }
             }
 
-            // Update other fields
             $service->service_type = $request->input('service_type');
             $service->service_name = $request->input('service_name');
             $service->short_description = $request->input('short_description');
@@ -576,12 +485,10 @@ class ServiceController extends Controller
             $service->category_id = $request->input('category_id');
             $service->hours = $request->input('hours');
 
-            // Save changes
             $service->save();
 
             return response()->json(['message' => 'Service updated successfully'], 200);
         } catch (\Exception $e) {
-            \Log::error('Error updating service:', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Error updating service. Please try again later.'], 500);
         }
     }
@@ -613,37 +520,6 @@ class ServiceController extends Controller
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Service not found'], 404);
         }
-    }
-
-    static public function getClientCoordinates()
-    {
-        $ip = self::getUserIpAddr();
-        Log::info('IP Address:', ['ip' => $ip]);
-        $location = Location::get($ip);
-        $latitude = $location->latitude;
-        $longitude = $location->longitude;
-        Log::info('Latitude:', ['latitude' => $latitude]);
-        Log::info('Longitude:', ['longitude' => $longitude]);
-
-        return response()->json(['latitude' => $latitude, 'longitude' => $longitude]);
-    }
-
-    static public function getUserIpAddr()
-    {
-        $ipaddress = '';
-        if (isset($_SERVER['HTTP_CLIENT_IP'])) $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
-        else if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        else if (isset($_SERVER['HTTP_X_FORWARDED'])) $ipaddress = $_SERVER['HTTP_X_FORWARDED'];
-        else if (isset($_SERVER['HTTP_FORWARDED_FOR'])) $ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
-        else if (isset($_SERVER['HTTP_FORWARDED'])) $ipaddress = $_SERVER['HTTP_FORWARDED'];
-        else if (isset($_SERVER['REMOTE_ADDR'])) $ipaddress = $_SERVER['REMOTE_ADDR'];
-        else $ipaddress = request()->ip();
-
-        if (strpos($ipaddress, ':') !== false) {
-            $ipaddress = explode(':', $ipaddress)[0];
-        }
-
-        return $ipaddress;
     }
 
     static public function getDistance($latitude1, $longitude1, $latitude2, $longitude2)
