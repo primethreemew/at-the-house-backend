@@ -351,8 +351,8 @@ class AdminController extends Controller
                         } else {
                             // Otherwise, format the open and close times
                             $formattedHours[$dayHours['day']] = [
-                                'open' => $open ? date("h:i A", strtotime($open)) : '--',
-                                'close' => $close ? date("h:i A", strtotime($close)) : '--',
+                                'open' => $open ? date("h:i A", strtotime($open)) : 'Closed',
+                                'close' => $close ? date("h:i A", strtotime($close)) : 'Closed',
                             ];
                         }
                     }
