@@ -285,10 +285,10 @@ class AdminController extends Controller
                         $close = $dayHours['close'] ?? null;
 
                         if (empty($open) && empty($close)) {
-                            $formattedHours[$dayHours['day']] = [
-                                "open" => "Closed",
-                                "close" => "Closed"
-                            ];
+                            // $formattedHours[$dayHours['day']] = [
+                            //     "open" => "Closed"
+                            // ];
+                            $formattedHours[$dayHours['day']] = ['Closed'];
                         } else {
                             $formattedHours[$dayHours['day']] = [
                                 'open' => $open ? date("h:i A", strtotime($open)) : 'Closed',
