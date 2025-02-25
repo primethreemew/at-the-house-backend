@@ -197,12 +197,15 @@ class AdminController extends Controller
         }
     }
 
-    public function getAllExploredCategory()
+    public function getAllExploredCategory(Request $request)
     {
-        $user = Auth::user();
+        if ($request->hasHeader('Authorization')) {
+            $user = Auth::guard('sanctum')->user();
 
-        if (!$user) {
-            return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+            // If token is provided but user is not authenticated, return unauthorized response
+            if (!$user) {
+                return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+            }
         }
 
         try {
@@ -216,9 +219,14 @@ class AdminController extends Controller
 
             return response()->json(['success' => true, 'result' => $services]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'An error occurred while retrieving Explored Categories', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while retrieving Explored Categories',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+
 
     public function getAllCategory()
     {
@@ -340,10 +348,17 @@ class AdminController extends Controller
         }
     }
 
-
-
     public function getAllRecommended()
     {
+        if ($request->hasHeader('Authorization')) {
+            $user = Auth::guard('sanctum')->user();
+
+            // If token is provided but user is not authenticated, return unauthorized response
+            if (!$user) {
+                return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+            }
+        }
+        
         try {
             $isRecommended = 'isRecommended'; // or any dynamic value
             $recommended = DB::select("SELECT id,category_name FROM services WHERE recommended = ?", [$isRecommended]);

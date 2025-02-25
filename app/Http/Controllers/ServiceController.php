@@ -203,10 +203,19 @@ class ServiceController extends Controller
     public function getAllPopularServices(Request $request)
     {
 
-        $user = Auth::user();
+        // $user = Auth::user();
 
-        if (!$user) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        // if (!$user) {
+        //     return response()->json(['error' => 'Unauthorized'], 403);
+        // }
+
+        if ($request->hasHeader('Authorization')) {
+            $user = Auth::guard('sanctum')->user();
+
+            // If token is provided but user is not authenticated, return unauthorized response
+            if (!$user) {
+                return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+            }
         }
 
         if ($request->input('latitude') && $request->input('longitude')) {
@@ -291,9 +300,18 @@ class ServiceController extends Controller
 
     public function getAgentServicesApp(Request $request)
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+        // $user = Auth::user();
+        // if (!$user) {
+        //     return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+        // }
+
+        if ($request->hasHeader('Authorization')) {
+            $user = Auth::guard('sanctum')->user();
+
+            // If token is provided but user is not authenticated, return unauthorized response
+            if (!$user) {
+                return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+            }
         }
 
         if ($request->input('latitude') && $request->input('longitude')) {
