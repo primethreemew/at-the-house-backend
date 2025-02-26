@@ -251,101 +251,8 @@ class ServiceController extends Controller
         return $formattedHours;
     }
 
-    // public function getAgentServicesApp(Request $request)
-    // {
-    //     // $user = Auth::user();
-    //     // if (!$user) {
-    //     //     return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
-    //     // }
-
-    //     if ($request->hasHeader('Authorization')) {
-    //         $user = Auth::guard('sanctum')->user();
-
-    //         // If token is provided but user is not authenticated, return unauthorized response
-    //         if (!$user) {
-    //             return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
-    //         }
-    //     }
-
-    //     if ($request->input('latitude') && $request->input('longitude')) {
-    //         $clientLatitude = $request->input('latitude');
-    //         $clientLongitude = $request->input('longitude');
-    //     } else {
-    //         return response()->json(['success' => false, 'error' => 'Latitude and Longitude are required'], 400);
-    //     }
-
-    //     $allowedCategoryTypes = ['popular', 'most_demanding'];
-    //     $result = [];
-
-    //     try {
-    //         foreach ($allowedCategoryTypes as $categoryType) {
-    //             $services = DB::table('agent_services')
-    //                 ->join('services', 'agent_services.category_id', '=', 'services.id')
-    //                 ->where('agent_services.service_type', $categoryType)
-    //                 ->select('agent_services.*', 'services.category_name', 'services.category_type', 'services.image')
-    //                 ->get();
-
-    //             foreach ($services as $service) {
-    //                 if ($service->featured_image && !str_starts_with($service->featured_image, 'http')) {
-    //                     $service->featured_image = url('storage/' . $service->featured_image);
-    //                 }
-    //                 if ($service->banner_image && !str_starts_with($service->banner_image, 'http')) {
-    //                     $service->banner_image = url('storage/' . $service->banner_image);
-    //                 }
-    //                 if ($service->image && !str_starts_with($service->image, 'http')) {
-    //                     $service->image = url('storage/' . $service->image);
-    //                 }
-
-    //                 $serviceLatitude = $service->latitude;
-    //                 $serviceLongitude = $service->longitude;
-    //                 $distance = $this->getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
-    //                 $service->distance = $distance;
-    //             }
-    //             $result[$categoryType] = $services;
-    //         }
-
-    //         return response()->json(['success' => true, 'services' => $result]);
-    //     } catch (\Exception $e) {
-    //         return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
-    //     }
-    // }
-
-    // public function getAllAgentsServices()
-    // {
-
-    //     $allowedCategoryTypes = ['popular', 'all'];
-    //     $result = [];
-
-    //     try {
-    //         foreach ($allowedCategoryTypes as $categoryType) {
-    //             if ($categoryType == "all") {
-    //                 $services = DB::select("SELECT * FROM agent_services");
-    //             } else {
-    //                 $services = DB::table('agent_services')
-    //                     ->join('services', 'agent_services.category_id', '=', 'services.id')
-    //                     ->where('agent_services.service_type', [$categoryType])
-    //                     ->select('agent_services.*', 'services.category_name', 'services.category_type')
-    //                     ->get();
-    //             }
-    //             $result[$categoryType] = $services;
-    //         }
-
-    //         return response()->json(['success' => true, 'services' => $result]);
-    //     } catch (\Exception $e) {
-    //         return response()->json(['success' => false, 'message' => 'An error occurred while retrieving services', 'error' => $e->getMessage()], 500);
-    //     }
-    // }
-
-
     public function getAllPopularServices(Request $request)
     {
-
-        // $user = Auth::user();
-
-        // if (!$user) {
-        //     return response()->json(['error' => 'Unauthorized'], 403);
-        // }
-
         if ($request->hasHeader('Authorization')) {
             $user = Auth::guard('sanctum')->user();
 
@@ -437,10 +344,6 @@ class ServiceController extends Controller
 
     public function getAgentServicesApp(Request $request)
     {
-        // $user = Auth::user();
-        // if (!$user) {
-        //     return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
-        // }
 
         if ($request->hasHeader('Authorization')) {
             $user = Auth::guard('sanctum')->user();
@@ -522,10 +425,19 @@ class ServiceController extends Controller
 
     public function getAgentServiceApp(Request $request)
     {
-        $user = Auth::user();
+        // $user = Auth::user();
 
-        if (!$user) {
-            return response()->json(['success' => false, 'data' => $user, 'error' => 'Unauthorized'], 403);
+        // if (!$user) {
+        //     return response()->json(['success' => false, 'data' => $user, 'error' => 'Unauthorized'], 403);
+        // }
+
+        if ($request->hasHeader('Authorization')) {
+            $user = Auth::guard('sanctum')->user();
+
+            // If token is provided but user is not authenticated, return unauthorized response
+            if (!$user) {
+                return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+            }
         }
 
         $id = $request->input('id');
