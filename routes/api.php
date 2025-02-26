@@ -50,7 +50,8 @@ Route::prefix('mobile')->group(function () {
     Route::middleware('auth:sanctum')->get('/admin/categories/all', [AdminController::class, 'getAllCategory']);
 
     // Explored category
-    Route::middleware('auth:sanctum')->get('/admin/categories/explored', [AdminController::class, 'getAllExploredCategory']);
+    //Route::middleware('auth:sanctum')->get('/admin/categories/explored', [AdminController::class, 'getAllExploredCategory']);
+    Route::get('/admin/categories/explored', [AdminController::class, 'getAllExploredCategory']);
 
     // Catgory by list of services
     Route::middleware('auth:sanctum')->get('/admin/category/', [AdminController::class, 'getServicesbyCategoryID']);
@@ -59,17 +60,16 @@ Route::prefix('mobile')->group(function () {
     Route::middleware('auth:sanctum')->get('/agent-services', [ServiceController::class, 'getAllAgentServicesApp']);
 
     //Popular services
-    Route::middleware('auth:sanctum')->get('/services/popular', [ServiceController::class, 'getAllPopularServices']);
+    //Route::middleware('auth:sanctum')->get('/services/popular', [ServiceController::class, 'getAllPopularServices']);
+    Route::get('/services/popular', [ServiceController::class, 'getAllPopularServices']);
 
     //Single service By id
-    Route::middleware('auth:sanctum')->get('/services', [ServiceController::class, 'getAgentServiceApp']);
+    //Route::middleware('auth:sanctum')->get('/services', [ServiceController::class, 'getAgentServiceApp']);
+    Route::get('/services', [ServiceController::class, 'getAgentServiceApp']);
     //Route::middleware('auth:sanctum')->get('/admin/services', [ServiceController::class, 'getSingleServiceApp']);
 
     //Route::put('/referral/{serviceId}', [AdminController::class, 'submitReferral']);
     Route::middleware('role:admin|agent')->group(function () {
-
-
-
         // Admin and Agent route to create agent service
         Route::post('/agent-services/create', [ServiceController::class, 'agentServiceCreate']);
         // Update a specific agent's service by ID

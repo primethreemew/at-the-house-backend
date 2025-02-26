@@ -155,58 +155,20 @@ class ServiceController extends Controller
 
     public function getAllAgentServicesApp(Request $request)
     {
-        $user = Auth::user();
 
-        if (!$user) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        // $user = Auth::user();
 
+        // if (!$user) {
+        //     return response()->json(['error' => 'Unauthorized'], 403);
+        // }
 
-        if ($request->input('latitude') && $request->input('longitude')) {
-            $clientLatitude = $request->input('latitude');
-            $clientLongitude = $request->input('longitude');
-        } else {
-            return response()->json(['success' => false, 'error' => 'Latitude and Longitude are required'], 400);
-        }
+        if ($request->hasHeader('Authorization')) {
+            $user = Auth::guard('sanctum')->user();
 
-        try {
-            $services = DB::table('agent_services')
-                ->join('services', 'agent_services.category_id', '=', 'services.id')
-                ->select('agent_services.*', 'services.category_name', 'services.category_type')
-                ->get();
-
-            foreach ($services as $service) {
-                $service->featured_image = $service->featured_image
-                    ? url('storage/' . $service->featured_image)
-                    : null;
-
-                $service->formatted_hours = $this->formatHours($service->hours);
-                unset($service->hours);
-
-                $serviceLatitude = $service->latitude;
-                $serviceLongitude = $service->longitude;
-                $distance = $this->getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
-                $service->distance = $distance;
+            // If token is provided but user is not authenticated, return unauthorized response
+            if (!$user) {
+                return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
             }
-
-            return response()->json(['success' => true, 'services' => $services]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'An error occurred while retrieving services',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-
-    public function getAllPopularServices(Request $request)
-    {
-
-        $user = Auth::user();
-
-        if (!$user) {
-            return response()->json(['error' => 'Unauthorized'], 403);
         }
 
         if ($request->input('latitude') && $request->input('longitude')) {
@@ -289,11 +251,107 @@ class ServiceController extends Controller
         return $formattedHours;
     }
 
+    public function getAllPopularServices(Request $request)
+    {
+        if ($request->hasHeader('Authorization')) {
+            $user = Auth::guard('sanctum')->user();
+
+            // If token is provided but user is not authenticated, return unauthorized response
+            if (!$user) {
+                return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+            }
+        }
+
+        if ($request->input('latitude') && $request->input('longitude')) {
+            $clientLatitude = $request->input('latitude');
+            $clientLongitude = $request->input('longitude');
+        } else {
+            return response()->json(['success' => false, 'error' => 'Latitude and Longitude are required'], 400);
+        }
+
+        try {
+            $allowedCategoryTypes = ['popular'];
+            $result = [];
+
+            foreach ($allowedCategoryTypes as $categoryType) {
+                $services = DB::table('agent_services')
+                    ->join('services', 'agent_services.category_id', '=', 'services.id')
+                    ->where('agent_services.service_type', $categoryType)
+                    ->select('agent_services.*', 'services.category_name', 'services.category_type')
+                    ->get();
+
+                foreach ($services as $service) {
+                    $service->featured_image = $service->featured_image
+                        ? url('storage/' . $service->featured_image)
+                        : null;
+
+                    $service->formatted_hours = $this->formatHours($service->hours);
+                    unset($service->hours);
+
+                    $serviceLatitude = $service->latitude;
+                    $serviceLongitude = $service->longitude;
+                    $distance = $this->getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
+                    $service->distance = $distance;
+                }
+
+                $result[$categoryType] = $services;
+            }
+
+            return response()->json(['success' => true, 'services' => $result]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while retrieving services',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Format hours JSON into readable format.
+     *
+     * @param string|null $hours
+     * @return array|null
+     */
+    // private function formatHours($hours)
+    // {
+    //     if (!$hours) {
+    //         return null;
+    //     }
+
+    //     $hoursData = json_decode($hours, true);
+    //     $formattedHours = [];
+
+    //     foreach ($hoursData as $dayHours) {
+    //         $open = $dayHours['open'] ?? null;
+    //         $close = $dayHours['close'] ?? null;
+
+    //         if (empty($open) && empty($close)) {
+    //             $formattedHours[$dayHours['day']] = [
+    //                 "open" => "Closed",
+    //                 "close" => "Closed"
+    //             ];
+    //         } else {
+    //             $formattedHours[$dayHours['day']] = [
+    //                 'open' => $open ? date("h:i A", strtotime($open)) : 'Closed',
+    //                 'close' => $close ? date("h:i A", strtotime($close)) : 'Closed',
+    //             ];
+    //         }
+    //     }
+
+    //     return $formattedHours;
+    // }
+
     public function getAgentServicesApp(Request $request)
     {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+
+        if ($request->hasHeader('Authorization')) {
+            $user = Auth::guard('sanctum')->user();
+
+            // If token is provided but user is not authenticated, return unauthorized response
+            if (!$user) {
+                return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+            }
         }
 
         if ($request->input('latitude') && $request->input('longitude')) {
@@ -367,10 +425,19 @@ class ServiceController extends Controller
 
     public function getAgentServiceApp(Request $request)
     {
-        $user = Auth::user();
+        // $user = Auth::user();
 
-        if (!$user) {
-            return response()->json(['success' => false, 'data' => $user, 'error' => 'Unauthorized'], 403);
+        // if (!$user) {
+        //     return response()->json(['success' => false, 'data' => $user, 'error' => 'Unauthorized'], 403);
+        // }
+
+        if ($request->hasHeader('Authorization')) {
+            $user = Auth::guard('sanctum')->user();
+
+            // If token is provided but user is not authenticated, return unauthorized response
+            if (!$user) {
+                return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
+            }
         }
 
         $id = $request->input('id');
