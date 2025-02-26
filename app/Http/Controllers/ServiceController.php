@@ -156,12 +156,6 @@ class ServiceController extends Controller
     public function getAllAgentServicesApp(Request $request)
     {
 
-        // $user = Auth::user();
-
-        // if (!$user) {
-        //     return response()->json(['error' => 'Unauthorized'], 403);
-        // }
-
         if ($request->hasHeader('Authorization')) {
             $user = Auth::guard('sanctum')->user();
 
@@ -251,8 +245,10 @@ class ServiceController extends Controller
         return $formattedHours;
     }
 
+
     public function getAllPopularServices(Request $request)
     {
+
         if ($request->hasHeader('Authorization')) {
             $user = Auth::guard('sanctum')->user();
 
@@ -425,16 +421,9 @@ class ServiceController extends Controller
 
     public function getAgentServiceApp(Request $request)
     {
-        // $user = Auth::user();
-
-        // if (!$user) {
-        //     return response()->json(['success' => false, 'data' => $user, 'error' => 'Unauthorized'], 403);
-        // }
-
         if ($request->hasHeader('Authorization')) {
             $user = Auth::guard('sanctum')->user();
 
-            // If token is provided but user is not authenticated, return unauthorized response
             if (!$user) {
                 return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
             }

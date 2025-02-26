@@ -343,7 +343,7 @@ class AdminController extends Controller
         }
     }
 
-    public function getAllRecommended()
+    public function getAllRecommended(Request $request)
     {
         if ($request->hasHeader('Authorization')) {
             $user = Auth::guard('sanctum')->user();
