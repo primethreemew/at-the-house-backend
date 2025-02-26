@@ -222,6 +222,7 @@ class AdminController extends Controller
         }
     }
 
+
     public function getAllCategory()
     {
         $user = Auth::user();
