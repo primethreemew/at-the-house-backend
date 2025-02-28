@@ -251,8 +251,10 @@ class ServiceController extends Controller
 
         if ($request->hasHeader('Authorization')) {
             $user = Auth::guard('sanctum')->user();
-
-            // If token is provided but user is not authenticated, return unauthorized response
+    
+            // // 🔹 Debugging: Log user authentication status
+            // Log::info('User Authenticated:', ['user' => $user]);
+    
             if (!$user) {
                 return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
             }

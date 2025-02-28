@@ -47,17 +47,20 @@ Route::prefix('mobile')->group(function () {
     Route::middleware('auth:sanctum')->get('/admin/services', [ServiceController::class, 'getAgentServicesApp']);
 
     // All Category 
-    Route::middleware('auth:sanctum')->get('/admin/categories/all', [AdminController::class, 'getAllCategory']);
+    //Route::middleware('auth:sanctum')->get('/admin/categories/all', [AdminController::class, 'getAllCategory']);
+    Route::get('/admin/categories/all', [AdminController::class, 'getAllCategory']);
 
     // Explored category
     //Route::middleware('auth:sanctum')->get('/admin/categories/explored', [AdminController::class, 'getAllExploredCategory']);
     Route::get('/admin/categories/explored', [AdminController::class, 'getAllExploredCategory']);
 
     // Catgory by list of services
-    Route::middleware('auth:sanctum')->get('/admin/category/', [AdminController::class, 'getServicesbyCategoryID']);
+    //Route::middleware('auth:sanctum')->get('/admin/category/', [AdminController::class, 'getServicesbyCategoryID']);
+    Route::get('/admin/category/{id}', [AdminController::class, 'getServicesbyCategoryID']);
 
     // Retrive All Agents Services
-    Route::middleware('auth:sanctum')->get('/agent-services', [ServiceController::class, 'getAllAgentServicesApp']);
+    //Route::middleware('auth:sanctum')->get('/agent-services', [ServiceController::class, 'getAllAgentServicesApp']);
+    Route::get('/agent-services', [ServiceController::class, 'getAllAgentServicesApp']);
 
     //Popular services
     //Route::middleware('auth:sanctum')->get('/services/popular', [ServiceController::class, 'getAllPopularServices']);
