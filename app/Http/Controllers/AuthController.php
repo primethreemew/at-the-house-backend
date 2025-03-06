@@ -593,6 +593,20 @@ class AuthController extends Controller
         }
     }
 
+    public function deleteAccount(Request $request)
+    {
+        $user = Auth::user(); 
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        // Delete the user account
+        $user->delete();
+
+        return response()->json(['message' => 'Your account has been deleted successfully'], 200);
+    }
+
     public function updateProfileApp(Request $request, User $user)
     {
         try {
@@ -607,8 +621,8 @@ class AuthController extends Controller
                     'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
                     //'phone' => 'required|string|max:255',
                     'phone' => ['required', 'string', 'regex:/^\d{3}-\d{3}-\d{4}$/', 'max:255'],
-                    'gender' => 'nullable|in:male,female,other',
-                    'birthdate' => 'nullable|date|date_format:m/d/Y',
+                    // 'gender' => 'nullable|in:male,female,other',
+                    // 'birthdate' => 'nullable|date|date_format:m/d/Y',
                     'profile_photo_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
                     // 'currentpassword' => 'nullable|string|min:8',
                     // 'newpassword' => 'nullable|string|min:8|same:confirmnewpassword',
@@ -624,7 +638,8 @@ class AuthController extends Controller
             //$request->validate($rules);
 
             // Update the user profile details
-            $updateData = $request->only(['name', 'email', 'phone', 'gender', 'birthdate']);
+            //$updateData = $request->only(['name', 'email', 'phone', 'gender', 'birthdate']);
+            $updateData = $request->only(['name', 'email', 'phone']);
 
             // Handle profile photo upload if provided
             if ($request->hasFile('profile_photo_path')) {

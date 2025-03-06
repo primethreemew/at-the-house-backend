@@ -102,6 +102,9 @@ Route::middleware('auth:sanctum', 'verified')->prefix('mobile')->group(function 
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+    Route::delete('/user/delete', [AuthController::class, 'deleteAccount']);
+
     Route::put('/referral/{serviceId}', [AdminController::class, 'submitReferral']);
     Route::get('/referrals', [AdminController::class, 'allReferralsApp']);
     Route::get('/single-referral', [AdminController::class, 'singleReferralsApp']);
