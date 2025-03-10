@@ -100,7 +100,11 @@ Route::middleware('auth:sanctum', 'verified')->prefix('mobile')->group(function 
     //Route::get('/agent-services/{id}', [ServiceController::class, 'getAgentServiceApp']);
     // Get authenticated user details
     Route::get('/user', function (Request $request) {
-        return $request->user();
+        //return $request->user();
+        return response()->json([
+            'user' => $request->user(),
+            'token' => $request->bearerToken()
+        ]);
     });
 
     Route::delete('/user/delete', [AuthController::class, 'deleteAccount']);

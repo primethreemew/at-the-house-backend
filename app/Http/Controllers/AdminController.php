@@ -380,7 +380,7 @@ class AdminController extends Controller
         }
     }
 
-    public function getAllRelevantSearch($categoryname)
+    public function  getAllRelevantSearch($categoryname)
     {
         $relevantCatId = DB::table('services')
             ->where('category_name', $categoryname)
