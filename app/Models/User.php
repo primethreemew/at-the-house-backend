@@ -30,7 +30,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'otp',
         'password',
         'gender',
-        'birthdate'
+        'birthdate',
+        'email_verified_at',
     ];
 
     /**
@@ -39,7 +40,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array<int, string>
      */
     protected $hidden = [
-        'password',
+        'password', 
         'remember_token',
         'two_factor_recovery_codes',
         'two_factor_secret',
@@ -96,7 +97,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->roles()->whereIn('name', $roles)->exists();
     }
 
-      public function agentServices()
+    public function agentServices()
     {
         return $this->hasMany(AgentService::class);
     }

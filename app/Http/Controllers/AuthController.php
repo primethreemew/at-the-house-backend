@@ -105,6 +105,7 @@ class AuthController extends Controller
                 'email' => $request->input('email'),
                 'phone' => $request->input('phone'),
                 'password' => Hash::make($request->input('password')),
+                'email_verified_at' =>  now(),
             ]);
 
             // Find the role ID for 'user'
