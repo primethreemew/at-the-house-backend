@@ -56,7 +56,7 @@ Route::prefix('mobile')->group(function () {
 
     // Catgory by list of services
     //Route::middleware('auth:sanctum')->get('/admin/category/', [AdminController::class, 'getServicesbyCategoryID']);
-    Route::get('/admin/category/{id}', [AdminController::class, 'getServicesbyCategoryID']);
+        Route::get('/admin/category', [AdminController::class, 'getServicesbyCategoryID']);
 
     // Retrive All Agents Services
     //Route::middleware('auth:sanctum')->get('/agent-services', [ServiceController::class, 'getAllAgentServicesApp']);

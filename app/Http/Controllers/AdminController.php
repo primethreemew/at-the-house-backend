@@ -255,83 +255,76 @@ class AdminController extends Controller
         }
     }
 
-    public function getServicesbyCategoryID(Request $request, $id)
-    {
-        //$id = $request->input('id');
-        // $user = Auth::user();
+    public function getServicesbyCategoryID(Request $request)
+{
+    try {
+        // Get query parameters
+        $id = $request->query('id');
+        $clientLatitude = $request->query('latitude');
+        $clientLongitude = $request->query('longitude');
 
-        // if (!$user) {
-        //     return response()->json(['success' => false, 'data' => $user, 'error' => 'Unauthorized'], 403);
-        // }
+        // Validate required parameters
+        if (!$id || !$clientLatitude || !$clientLongitude) {
+            return response()->json(['success' => false, 'error' => 'id, latitude, and longitude are required'], 400);
+        }
+
+        // Authenticate if Authorization header is present
         if ($request->hasHeader('Authorization')) {
             $user = Auth::guard('sanctum')->user();
-
-            // If token is provided but user is not authenticated, return unauthorized response
             if (!$user) {
                 return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
             }
         }
 
-        if ($request->input('latitude') && $request->input('longitude')) {
-            $clientLatitude = $request->input('latitude');
-            $clientLongitude = $request->input('longitude');
-        } else {
-            return response()->json(['success' => false, 'error' => 'Latitude and Longitude are required'], 400);
+        // Fetch services
+        $services = DB::table('agent_services')
+            ->join('services', 'agent_services.category_id', '=', 'services.id')
+            ->where('agent_services.category_id', $id)
+            ->select('agent_services.*', 'services.category_name', 'agent_services.latitude as latitude', 'agent_services.longitude as longitude')
+            ->get();
+
+        if ($services->isEmpty()) {
+            return response()->json(['success' => false, 'error' => 'Service not found'], 404);
         }
 
-        try {
-            $services = DB::table('agent_services')
-                ->join('services', 'agent_services.category_id', '=', 'services.id')
-                ->where('agent_services.category_id', $id)
-                ->select('agent_services.*', 'services.category_name', 'agent_services.latitude as latitude', 'agent_services.longitude as longitude')
-                ->get();
-
-            if ($services->isEmpty()) {
-                return response()->json(['success' => false, 'error' => 'Service not found'], 404);
+        // Process services
+        foreach ($services as $service) {
+            if ($service->featured_image) {
+                $service->featured_image = url('storage/' . $service->featured_image);
             }
 
-            foreach ($services as $service) {
-                if ($service->featured_image) {
-                    $service->featured_image = url('storage/' . $service->featured_image);
+            if ($service->hours) {
+                $hoursData = json_decode($service->hours, true);
+                $formattedHours = [];
+
+                foreach ($hoursData as $dayHours) {
+                    $open = $dayHours['open'] ?? null;
+                    $close = $dayHours['close'] ?? null;
+
+                    $formattedHours[$dayHours['day']] = [
+                        'open' => $open ? date("h:i A", strtotime($open)) : 'Closed',
+                        'close' => $close ? date("h:i A", strtotime($close)) : 'Closed',
+                    ];
                 }
 
-                if ($service->hours) {
-                    $hoursData = json_decode($service->hours, true);
-
-                    $formattedHours = [];
-
-                    foreach ($hoursData as $dayHours) {
-                        $open = $dayHours['open'] ?? null;
-                        $close = $dayHours['close'] ?? null;
-
-                        if (empty($open) && empty($close)) {
-                            $formattedHours[$dayHours['day']] = [
-                                "open" => "Closed",
-                                "close" => "Closed"
-                            ];
-                        } else {
-                            $formattedHours[$dayHours['day']] = [
-                                'open' => $open ? date("h:i A", strtotime($open)) : 'Closed',
-                                'close' => $close ? date("h:i A", strtotime($close)) : 'Closed',
-                            ];
-                        }
-                    }
-
-                    $service->formatted_hours = $formattedHours;
-                    unset($service->hours);
-
-                    $serviceLatitude = $service->latitude;
-                    $serviceLongitude = $service->longitude;
-                    $distance = ServiceController::getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
-                    $service->distance = $distance;
-                }
+                $service->formatted_hours = $formattedHours;
+                unset($service->hours);
             }
 
-            return response()->json(['success' => true, 'services' => $services]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'error' => 'An error occurred: ' . $e->getMessage()], 500);
+            // Calculate distance
+            $serviceLatitude = $service->latitude;
+            $serviceLongitude = $service->longitude;
+            $distance = ServiceController::getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
+            $service->distance = $distance;
         }
+
+        return response()->json(['success' => true, 'services' => $services]);
+
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'error' => 'An error occurred: ' . $e->getMessage()], 500);
     }
+}
+
 
     public function getAllServicesApp()
     {
