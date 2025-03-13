@@ -561,7 +561,7 @@ class AdminController extends Controller
 
             $referrals = DB::table('referrals')
                 ->join('agent_services', 'referrals.agent_service_id', '=', 'agent_services.id')
-                ->join('users', 'agent_services.user_id', '=', 'users.id')
+                ->join('users', 'referrals.referrer_id', '=', 'users.id')
                 ->select(
                     'referrals.*',
                     'agent_services.service_name as service_name',
