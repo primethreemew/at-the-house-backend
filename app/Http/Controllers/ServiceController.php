@@ -173,31 +173,30 @@ class ServiceController extends Controller
         }
 
         try {
-            $allowedCategoryTypes = ['popular'];
+            //$allowedCategoryTypes = ['popular'];
             $result = [];
 
-            foreach ($allowedCategoryTypes as $categoryType) {
-                $services = DB::table('agent_services')
-                    ->join('services', 'agent_services.category_id', '=', 'services.id')
-                    ->where('agent_services.service_type', $categoryType)
-                    ->select('agent_services.*', 'services.category_name', 'services.category_type')
-                    ->get();
+            // foreach ($allowedCategoryTypes as $categoryType) {
+            //->where('agent_services.service_type', $categoryType) -> part of service query before
+                        //     }
+            $services = DB::table('agent_services')
+                ->join('services', 'agent_services.category_id', '=', 'services.id')
+                ->select('agent_services.*', 'services.category_name', 'services.category_type')
+                ->get();
 
-                foreach ($services as $service) {
-                    $service->featured_image = $service->featured_image
-                        ? url('storage/' . $service->featured_image)
-                        : null;
+            foreach ($services as $service) {
+                $service->featured_image = $service->featured_image
+                    ? url('storage/' . $service->featured_image)
+                    : null;
 
-                    $service->formatted_hours = $this->formatHours($service->hours);
-                    unset($service->hours);
+                $service->formatted_hours = $this->formatHours($service->hours);
+                unset($service->hours);
 
-                    $serviceLatitude = $service->latitude;
-                    $serviceLongitude = $service->longitude;
-                    $distance = $this->getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
-                    $service->distance = $distance;
-                }
-
-                $result[$categoryType] = $services;
+                $serviceLatitude = $service->latitude;
+                $serviceLongitude = $service->longitude;
+                $distance = $this->getDistance($clientLatitude, $clientLongitude, $serviceLatitude, $serviceLongitude);
+                $service->distance = $distance;
+                $result = $services;
             }
 
             return response()->json(['success' => true, 'services' => $result]);
@@ -251,10 +250,10 @@ class ServiceController extends Controller
 
         if ($request->hasHeader('Authorization')) {
             $user = Auth::guard('sanctum')->user();
-    
+
             // // 🔹 Debugging: Log user authentication status
             // Log::info('User Authenticated:', ['user' => $user]);
-    
+
             if (!$user) {
                 return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
             }

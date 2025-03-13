@@ -344,7 +344,7 @@ class AdminController extends Controller
                     }
                 }
 
-                $result = $services;
+                $result[$categoryType] = $services;
             }
 
             return response()->json(['success' => true, 'services' => $result]);
