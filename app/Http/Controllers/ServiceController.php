@@ -184,7 +184,8 @@ class ServiceController extends Controller
                 ->select('agent_services.*', 'services.category_name', 'services.category_type')
                 ->get();
 
-            foreach ($services as $service) {
+            foreach ($services as $service)
+            {
                 $service->featured_image = $service->featured_image
                     ? url('storage/' . $service->featured_image)
                     : null;
