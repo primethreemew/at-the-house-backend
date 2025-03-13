@@ -344,7 +344,7 @@ class AdminController extends Controller
                     }
                 }
 
-                $result[$categoryType] = $services;
+                $result = $services;
             }
 
             return response()->json(['success' => true, 'services' => $result]);
@@ -363,7 +363,7 @@ class AdminController extends Controller
                 return response()->json(['success' => false, 'error' => 'Unauthorized'], 403);
             }
         }
-        
+
         try {
             $isRecommended = 'isRecommended'; // or any dynamic value
             $recommended = DB::select("SELECT id,category_name FROM services WHERE recommended = ?", [$isRecommended]);
