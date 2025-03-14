@@ -629,7 +629,7 @@ class AuthController extends Controller
                     'name' => 'required|string|max:255',
                     'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
                     //'phone' => 'required|string|max:255',
-                    'phone' => ['required', 'string', 'regex:/^\d{3}-\d{3}-\d{4}$/', 'max:255'],
+                    'phone' => ['required', 'string', 'regex:/^[0-9]+$/', 'max:10'],
                     // 'gender' => 'nullable|in:male,female,other',
                     // 'birthdate' => 'nullable|date|date_format:m/d/Y',
                     'profile_photo_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
