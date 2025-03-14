@@ -638,7 +638,7 @@ class AuthController extends Controller
                 ];
 
             $messages = [
-                'phone.regex' => 'The phone number must be in the format 202-123-4567.',
+                'phone.regex' => 'The phone number must be number without any alphabet.',
             ];
     
             // Validate the request
