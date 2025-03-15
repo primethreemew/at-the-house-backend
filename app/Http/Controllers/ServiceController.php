@@ -516,17 +516,18 @@ class ServiceController extends Controller
 
             if ($request->has('featuredImage') && !empty($request->input('featuredImage'))) {
                 $featuredImageData = $request->input('featuredImage');
-
-                if (strpos($featuredImageData, 'data:image') === 0) {
-                    $featuredImageData = str_replace('data:image/png;base64,', '', $featuredImageData);
+            
+                if (preg_match('/^data:image\/(png|jpe?g);base64,/', $featuredImageData, $matches)) {
+                    $extension = $matches[1] == 'jpeg' ? 'jpg' : $matches[1]; // Convert 'jpeg' to 'jpg'
+                    $featuredImageData = preg_replace('/^data:image\/(png|jpe?g);base64,/', '', $featuredImageData);
                     $featuredImageData = str_replace(' ', '+', $featuredImageData);
-                    $featuredImageName = uniqid() . '_featured.png';
-
+                    $featuredImageName = uniqid() . '_featured.' . $extension;
+            
                     Storage::disk('public')->put('featured_image/' . $featuredImageName, base64_decode($featuredImageData));
-
+            
                     $service->featured_image = 'featured_image/' . $featuredImageName;
                 }
-            }
+            }            
 
             $service->service_type = $request->input('service_type');
             $service->service_name = $request->input('service_name');
