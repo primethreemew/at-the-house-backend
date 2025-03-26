@@ -10,5 +10,3 @@ php artisan config:clear
 service nginx reload
 
 nginx -g "daemon off;"
-
-tail -F storage/logs/laravel.log
