@@ -61,7 +61,7 @@ return [
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => function_exists('env') ? env('LOG_LEVEL', 'debug') : 'debug',
             'replace_placeholders' => true,
         ],
 
@@ -94,16 +94,20 @@ return [
             'processors' => [PsrLogMessageProcessor::class],
         ],
 
+        // 'stderr' => [
+        //     'driver' => 'monolog',
+        //     'level' => env('LOG_LEVEL', 'debug'),
+        //     'handler' => StreamHandler::class,
+        //     'formatter' => env('LOG_STDERR_FORMATTER'),
+        //     'with' => [
+        //         'stream' => 'php://stderr',
+        //     ],
+        //     'processors' => [PsrLogMessageProcessor::class],
+        // ],
         'stderr' => [
-            'driver' => 'monolog',
-            'level' => env('LOG_LEVEL', 'debug'),
-            'handler' => StreamHandler::class,
-            'formatter' => env('LOG_STDERR_FORMATTER'),
-            'with' => [
-                'stream' => 'php://stderr',
-            ],
-            'processors' => [PsrLogMessageProcessor::class],
-        ],
+        'driver' => 'errorlog',
+        'level' => env('LOG_LEVEL', 'debug'),
+    ],
 
         'syslog' => [
             'driver' => 'syslog',

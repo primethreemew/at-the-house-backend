@@ -8,3 +8,7 @@ php artisan config:cache
 php artisan config:clear
 
 service nginx reload
+
+nginx -g "daemon off;"
+
+tail -F storage/logs/laravel.log
