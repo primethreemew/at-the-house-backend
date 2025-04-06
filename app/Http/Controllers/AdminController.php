@@ -16,13 +16,18 @@ use App\Models\Role;
 use App\Models\Service;
 use App\Models\Referral;
 use Illuminate\Support\Facades\Storage;
+use Log;
 
 class AdminController extends Controller
 {
     public function viewAllUsers()
     {
         if (auth()->user()->roles->contains('name', 'admin')) {
-            $users = User::all();
+            $users = DB::table('users')
+                ->join('role_user', 'users.id', '=', 'role_user.user_id')
+                ->where('role_user.role_id', 3)
+                ->select('users.*')
+                ->get();
             return response()->json(['users' => $users]);
         }
 
@@ -33,7 +38,7 @@ class AdminController extends Controller
     {
         if (auth()->user()->roles->contains('name', 'admin')) {
             $agents = User::whereHas('roles', function ($query) {
-                $query->where('name', 'agent');
+                $query->whereIn('name', ['agent', 'admin']);
             })->get();
 
             return response()->json(['agents' => $agents]);
@@ -70,9 +75,13 @@ class AdminController extends Controller
                     'email' => $request->email,
                     'phone' => $request->phone,
                     'password' => bcrypt($request->password),
+                    'email_verified_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
 
-                $agent->roles()->attach(Role::where('name', 'agent')->first());
+                $agent->roles()->attach(Role::whereIn('name', ['agent', 'admin'])->get());
+                
 
                 return response()->json(['message' => 'Verification Request Sent!']);
             }
@@ -139,11 +148,22 @@ class AdminController extends Controller
     public function delete(User $user)
     {
         $admin = auth()->user();
-        if (!$admin || !$admin->hasRole('admin')) {
+        if ($admin->id === $user->id) {
+            return response()->json(['error' => 'You cannot delete yourself'], 403);
+        }
+
+        $isAdmin = $admin->roles->contains('name', 'admin');
+
+        if (!$isAdmin) {
             return response()->json(['error' => 'Unauthorized access'], 403);
         }
 
-        if (!$user->hasRole('admin')) {
+        // log $admin
+        if (!$isAdmin) {
+            return response()->json(['error' => 'Unauthorized access'], 403);
+        }
+
+        if ($isAdmin) {
             $deletedUserRoles = $user->roles->pluck('name')->toArray();
             $user->delete();
             return response()->json(['message' => 'User deleted successfully', 'deleted_user_roles' => $deletedUserRoles]);
